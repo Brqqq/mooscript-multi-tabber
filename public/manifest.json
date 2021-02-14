@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "version": "1.0.0",
+  "name": "Mooscript",
+  "description": "A script for mobstar.cc",
+  "background": {
+    "page": "background.html"
+  },
+  "options_page": "index.html",
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  
+  "permissions": [
+    "tabs",
+    "storage",
+    "cookies",
+    "webRequest",
+    "webRequestBlocking",
+    "https://www.mobstar.cc/*"
+  ]
+}
