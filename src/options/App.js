@@ -1,6 +1,7 @@
 /*global chrome*/
 
 import './App.css';
+import 'rodal/lib/rodal.css';
 import NewUser from "./NewUser";
 import AccountList from "./AccountList";
 

@@ -19,7 +19,7 @@ export const doJailbust = async () => {
             return nobodyInJailToBustCooldown;
         }
 
-        const { document: bustResult } = await getDoc(firstPersonToBust.href);
+        const { document: bustResult } = await getDoc(Routes.MainPage + firstPersonToBust.pathname + firstPersonToBust.search);
 
         if (bustResult.documentElement.innerText.includes("Busted pal!")) {
             return bustingCooldown;

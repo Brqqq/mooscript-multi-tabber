@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { removeAccount, updateAccount, addAccount, getFromStorage, setInStorage, initStorage, getAccounts } from "./storage.js";
+import { removeAccount, updateAccount, addAccount, updateEveryAccount, getFromStorage, setInStorage, initStorage, getAccounts } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -12,11 +12,19 @@ import { collectWill } from "./actions/willcollector.js";
 import { isDead, getDoc, isLoggedOut, isInJail, postForm, sleep } from "./actions/utils.js";
 import { Routes } from "./actions/routes.js";
 import { savePlayerInfo } from "./actions/saveplayerinfo.js";
+import { buyItems } from "./actions/buyitems.js";
+import { doJailbust } from "./actions/jailbuster.js";
+
+chrome.browserAction.onClicked.addListener(() => {
+    chrome.tabs.create({ url: "index.html" });
+});
 
 let mobAuths = {};
 
 window.currentCookie = "";
 
+
+let manualLoginRequestId = "";
 
 // All of this header magic is to distinguish extension HTTP requests vs non-extension HTTP requests
 // Otherwise this script would constantly interfere with the user playing the game
@@ -24,13 +32,17 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
         /* Identify somehow that it's a request initiated by you */
 
+        if (details.url.includes("mooscript=true")) {
+            manualLoginRequestId = details.requestId;
+        }
+
         // This means the the request came from somewhere other than our script
-        if (details.initiator == null || !details.initiator.includes("chrome-extension://")) {
+        if (manualLoginRequestId === details.requestId || details.url.includes("mooscript=true") || details.initiator == null || !details.initiator.includes("chrome-extension://")) {
             return { requestHeaders: details.requestHeaders };
         }
 
         for (var i = 0; i < details.requestHeaders.length; i++) {
-            if (details.requestHeaders[i].name === 'Cookie') {
+            if (details.requestHeaders[i].name === "Cookie") {
                 details.requestHeaders[i].value = window.currentCookie;
                 break;
             }
@@ -44,7 +56,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
 
 chrome.webRequest.onHeadersReceived.addListener((details) => {
-    if (details.initiator == null || !details.initiator.includes("chrome-extension://")) {
+    if (details.url.includes("mooscript=true") || details.initiator == null || !details.initiator.includes("chrome-extension://")) {
         return { responseHeaders: details.responseHeaders };
     }
 
@@ -53,34 +65,28 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
         return { responseHeaders: details.responseHeaders };
     }
 
+    //const authCookie = authCookies[0];
     const authCookie = authCookies.find(cookie => !cookie.value.includes("deleted"))
-    // 
-    if (authCookie == null) {
-        return { responseHeaders: details.responseHeaders };
-    }
-    const authCookieParts = authCookie.value.split(";");
-    window.currentCookie = authCookieParts[0];
 
+    if (authCookie) {
+        const authCookieParts = authCookie.value.split(";");
+        window.currentCookie = authCookieParts[0];
+
+
+    } else {
+        // Don't save the "deleted" cookie. It causes some weird infinite redirect issues
+        window.currentCookie = "";
+    }
     // Strip set-cookie headers so they don't get saved and affect the tabs
     // We manually set the cookie so it doesn't affect us
     details.responseHeaders = details.responseHeaders.filter(header => header.name !== "Set-Cookie");;
-
     return { responseHeaders: details.responseHeaders };
 },
     { urls: ["https://www.mobstar.cc/*"] },
     ["blocking", "responseHeaders", "extraHeaders"]);
 
 var fetchMobAuth = async (email, password) => {
-    // We rely on the side effect in onHeadersReceived to get the cookie
-    // const fetchResult = await fetch("https://www.mobstar.cc/main/login.php", {
-    //     body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-    //     headers: {
-    //         "Content-Type": "application/x-www-form-urlencoded"
-    //     },
-    //     method: "POST"
-    // });
-
-    const fetchResult = await postForm(Routes.Login, `email=${email}&password=${password}`);
+    const fetchResult = await postForm(Routes.Login, `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, { disableSanitize: true });
 
     if (isLoggedOut(fetchResult.result)) {
         return false;
@@ -120,6 +126,10 @@ window.addAccount = addAccount;
 window.removeAccount = removeAccount;
 
 window.updateAccount = updateAccount;
+
+window.updateEveryAccount = updateEveryAccount;
+
+window.setInStorage = setInStorage;
 
 const gameLoop = async (action, ticksInSeconds) => {
     let lastLoopTime = new Date();
@@ -174,6 +184,9 @@ const start = async () => {
         lastPlayerSaved: 0,
         playerSaveCooldown: 0,
 
+        lastItemsBought: 0,
+        itemBuyingCooldown: 0,
+
         hasCheckedWill: false
     })
     const configs = {};
@@ -182,10 +195,10 @@ const start = async () => {
         const accounts = getAccounts();
         for (let email of Object.keys(accounts)) {
             const account = accounts[email];
-            if(!account.active) {
+            if (!account.active) {
                 continue;
             }
-            
+
             let config = configs[email];
 
             if (config == null) {
@@ -200,6 +213,11 @@ const start = async () => {
                     auth = await fetchMobAuth(email, account.password);
                     if (auth) {
                         mobAuths[email] = auth;
+                        if (account.invalidPassword) {
+                            await updateAccount(email, {
+                                invalidPassword: false
+                            });
+                        }
                     } else {
                         await updateAccount(email, {
                             invalidPassword: true,
@@ -215,23 +233,38 @@ const start = async () => {
                     config.hasCheckedWill = true;
                 }
 
-                const smallCrimeResult = await performAction(doSmallCrime, config.smallCrimeCooldown, config.lastSmallCrime);
-                if (smallCrimeResult) {
-                    config.smallCrimeCooldown = smallCrimeResult;
-                    config.lastSmallCrime = new Date().valueOf();
+                if (account.enableSmallCrime) {
+                    const smallCrimeResult = await performAction(doSmallCrime, config.smallCrimeCooldown, config.lastSmallCrime);
+                    if (smallCrimeResult) {
+                        config.smallCrimeCooldown = smallCrimeResult;
+                        config.lastSmallCrime = new Date().valueOf();
+                    }
                 }
 
-                const gtaResult = await performAction(doGta, config.gtaCooldown, config.lastGta);
-                if (gtaResult) {
-                    config.gtaCooldown = gtaResult;
-                    config.lastGta = new Date().valueOf();
+                if (account.enableGta) {
+                    const gtaResult = await performAction(doGta, config.gtaCooldown, config.lastGta);
+                    if (gtaResult) {
+                        config.gtaCooldown = gtaResult;
+                        config.lastGta = new Date().valueOf();
+                    }
                 }
 
-                const carSellingResult = await performAction(sellCars, config.carSellingCooldown, config.lastCarSelling);
-                if (carSellingResult) {
-                    config.carSellingCooldown = carSellingResult;
-                    config.lastCarSelling = new Date().valueOf();
+                if (account.enableCarSelling) {
+                    const carSellingResult = await performAction(sellCars, config.carSellingCooldown, config.lastCarSelling);
+                    if (carSellingResult) {
+                        config.carSellingCooldown = carSellingResult;
+                        config.lastCarSelling = new Date().valueOf();
+                    }
                 }
+
+                if (account.enableItemBuying) {
+                    const itemBuyingResult = await performAction(buyItems, config.itemBuyingCooldown, config.lastItemsBought);
+                    if (itemBuyingResult) {
+                        config.itemBuyingCooldown = itemBuyingResult;
+                        config.lastItemsBought = new Date().valueOf();
+                    }
+                }
+
 
                 const leadCreationResult = await performAction(createLead, config.leadCreationCooldown, config.lastLeadCreation);
                 if (leadCreationResult) {
@@ -239,27 +272,51 @@ const start = async () => {
                     config.lastLeadCreation = new Date().valueOf();
                 }
 
-                const drugDealResult = await performAction(doDrugDeal, config.drugDealingCooldown, config.lastDrugDeal);
-                if (drugDealResult) {
-                    config.drugDealingCooldown = drugDealResult;
-                    config.lastDrugDeal = new Date().valueOf();
+                if (account.enableDrugRunning) {
+                    const drugDealResult = await performAction(doDrugDeal, config.drugDealingCooldown, config.lastDrugDeal);
+                    if (drugDealResult) {
+                        config.drugDealingCooldown = drugDealResult;
+                        config.lastDrugDeal = new Date().valueOf();
+                    }
                 }
 
-                const drugFindResult = await performAction(findDrugRun, config.drugFindCooldown, config.lastDrugFind);
-                if (drugFindResult) {
-                    config.drugFindCooldown = drugFindResult;
-                    config.lastDrugFind = new Date().valueOf();
+                if (account.enableDrugRunFinding) {
+                    const drugFindResult = await performAction(findDrugRun, config.drugFindCooldown, config.lastDrugFind);
+                    if (drugFindResult) {
+                        config.drugFindCooldown = drugFindResult;
+                        config.lastDrugFind = new Date().valueOf();
+                    }
                 }
 
                 const savePlayerResult = await performAction(savePlayerInfo, config.playerSaveCooldown, config.lastPlayerSaved);
-                if(savePlayerResult) {
+                if (savePlayerResult) {
                     config.playerSaveCooldown = savePlayerResult;
                     config.lastPlayerSaved = new Date().valueOf();
                 }
 
+                if (account.enableJailbusting) {
+                    const jailBustResult = await performAction(doJailbust, config.jailBustCooldown, config.lastJailBust);
+                    if (jailBustResult) {
+                        config.jailBustCooldown = jailBustResult;
+                        config.lastJailBust = new Date().valueOf();
+                    }
+                }
+
                 await sleep(1000);
             } catch (e) {
-                const fetchRes = await getDoc(Routes.TestPage);
+                let fetchRes
+                try {
+                    fetchRes = await getDoc(Routes.TestPage);
+                } catch (innerEx) {
+                    console.log("Error with connecting to mobstar");
+                    console.log("Initial error")
+                    console.error(e);
+                    console.log("Mobstar connection exception")
+                    console.error(innerEx);
+                    await sleep(5000);
+                    continue;
+                }
+
                 if (isDead(fetchRes.document)) {
                     await updateAccount(email, {
                         isDead: true,
@@ -270,13 +327,17 @@ const start = async () => {
                     auth = await fetchMobAuth(email, account.password);
                     if (auth) {
                         mobAuths[email] = auth;
+                        if (account.invalidPassword) {
+                            await updateAccount(email, {
+                                invalidPassword: false
+                            });
+                        }
                     } else {
                         await updateAccount(email, {
                             invalidPassword: true,
                             active: false
                         });
                     }
-                    // login
                 } else if (isInJail(fetchRes.result)) {
                     // Do nothing
                 }

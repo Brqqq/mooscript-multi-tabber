@@ -3,7 +3,7 @@ let drugs = {};
 
 export const getFromStorage = (keysToGet) => {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get(keysToGet, (result) => {
+        chrome.storage.local.get(keysToGet, (result) => {
             if (chrome.runtime.lastError) {
                 reject(Error(chrome.runtime.lastError.message));
             } else {
@@ -15,7 +15,7 @@ export const getFromStorage = (keysToGet) => {
 
 export const setInStorage = (newValue) => {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.set(newValue, () => {
+        chrome.storage.local.set(newValue, () => {
             if (chrome.runtime.lastError) {
                 reject(Error(chrome.runtime.lastError.message));
             } else {
@@ -38,7 +38,14 @@ export const addAccount = async (email, password) => {
             password,
             active: true,
             dead: false,
-            invalidPassword: false
+            invalidPassword: false,
+            enableJailbusting: true,
+            enableSmallCrime: true,
+            enableGta: true,
+            enableCarSelling: true,
+            enableItemBuying: true,
+            enableDrugRunning: true,
+            enableDrugRunFinding: true
         }
     };
 
@@ -68,6 +75,24 @@ export const updateAccount = async (email, updatedValues) => {
     };
 
     return setInStorage({ accounts: newAccounts });
+}
+
+export const updateEveryAccount = async (updatedValues) => {
+    const { accounts } = await getFromStorage("accounts");
+    const arrayOfAccounts = Object.keys(accounts).map(email => ({
+        email,
+        account: accounts[email]
+    }));
+
+    const updatedAccounts = arrayOfAccounts.reduce((acc, curr) => ({
+        ...acc,
+        [curr.email]: {
+            ...curr.account,
+            ...updatedValues
+        }
+    }), {});
+
+    setInStorage({ accounts: updatedAccounts });
 }
 
 export const initStorage = async () => {
@@ -105,7 +130,7 @@ export const initStorage = async () => {
         }
     };
 
-    chrome.storage.sync.onChanged.addListener((changes) => {
+    chrome.storage.local.onChanged.addListener((changes) => {
         if (changes.accounts != null) {
             accounts = changes.accounts.newValue;
         }

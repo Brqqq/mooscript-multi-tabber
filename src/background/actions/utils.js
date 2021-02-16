@@ -22,10 +22,10 @@ export const getDoc = async (url) => {
     };
 }
 
-export const postForm = async (url, postBody) => {
+export const postForm = async (url, postBody, options = {}) => {
     const fetchCall = await fetch(url, {
         method: "post",
-        body: sanitize(postBody),
+        body: options.disableSanitize ? postBody : sanitize(postBody),
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         }

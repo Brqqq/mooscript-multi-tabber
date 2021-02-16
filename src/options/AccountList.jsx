@@ -2,9 +2,13 @@
 import React from "react";
 import Play from "./icons/play.svg";
 import Pause from "./icons/pause.svg";
+import ConfigModal from "./ConfigModal";
+import Rodal from 'rodal';
+import Options from "./Options";
 
 const AccountList = (props) => {
     const [accounts, setAccounts] = React.useState({});
+    const [configuringAccount, setConfiguringAccount] = React.useState(undefined);
 
     const onAccountListChange = (changes) => {
         if (changes.accounts != null) {
@@ -13,15 +17,15 @@ const AccountList = (props) => {
     }
 
     React.useEffect(() => {
-        chrome.storage.sync.onChanged.addListener(onAccountListChange);
+        chrome.storage.local.onChanged.addListener(onAccountListChange);
 
         return () => {
-            chrome.storage.sync.onChanged.removeListener(onAccountListChange);
+            chrome.storage.local.onChanged.removeListener(onAccountListChange);
         };
     }, [onAccountListChange]);
 
     React.useEffect(() => {
-        chrome.storage.sync.get("accounts", ({ accounts }) => {
+        chrome.storage.local.get("accounts", ({ accounts }) => {
             setAccounts(accounts || {});
         })
     }, []);
@@ -30,9 +34,18 @@ const AccountList = (props) => {
         chrome.extension.getBackgroundPage().removeAccount(email);
     }
 
-    const onLogin = async (email) => {
-        await chrome.extension.getBackgroundPage().useAuthToken(email);
-        window.open("https://www.mobstar.cc");
+    const onLogin = async (e, email) => {
+        if (accounts[email].active) {
+            e.preventDefault();
+            try {
+                await chrome.extension.getBackgroundPage().useAuthToken(email);
+            } catch (e) {
+                alert("Please wait a moment and try again in a second. The script has to log you in first.")
+                return;
+            }
+
+            window.open("https://www.mobstar.cc");
+        }
     }
 
     const setActive = (email, isActive) => {
@@ -49,7 +62,7 @@ const AccountList = (props) => {
                 {account.name}
                 <span style={{ color: "red" }}>(DEAD)</span>
             </>
-        } else if(!account.name) {
+        } else if (!account.name) {
             return <>Loading...</>
         }
 
@@ -57,6 +70,7 @@ const AccountList = (props) => {
     }
 
     return <>
+        <Options accounts={accounts} />
         <h3>Accounts</h3>
         <table>
             <thead>
@@ -64,6 +78,7 @@ const AccountList = (props) => {
                     <th>Login</th>
                     <th>Start</th>
                     <th>Script status</th>
+                    <th>Configure</th>
                     <th>Email</th>
                     <th>Name</th>
                     <th>Rank</th>
@@ -83,12 +98,13 @@ const AccountList = (props) => {
                     const account = accounts[email];
                     return <tr key={email}>
                         <td>
-                            <button onClick={e => {
-                                e.preventDefault();
-                                onLogin(email);
-                            }}>
-                                Login
-                            </button>
+                            <form method="post" action="https://www.mobstar.cc/main/login.php?mooscript=true" target="mobstar" onSubmit={(e) => onLogin(e, email)}>
+                                <input type="hidden" name="email" value={email} />
+                                <input type="hidden" name="password" value={account.password} />
+                                <button type="submit">
+                                    Login
+                                </button>
+                            </form>
                         </td>
                         <td>
                             {account.active && <a href="#" alt="Pause script" onClick={() => setActive(email, false)}><img src={Pause} /></a>}
@@ -97,6 +113,9 @@ const AccountList = (props) => {
                         <td>
                             {account.active && "Running..."}
                             {!account.active && "Paused"}
+                        </td>
+                        <td>
+                            <a href="#" onClick={() => setConfiguringAccount({ email, account })}>Configure</a>
                         </td>
                         <td>{email}</td>
                         <td><Name account={account} /></td>
@@ -121,6 +140,19 @@ const AccountList = (props) => {
                 })}
             </tbody>
         </table>
+        {/* We dont use the `visibility` because we want an unmountOnExit behavior that doesn't exist */}
+        {
+            configuringAccount != null && <Rodal
+                visible
+                onClose={() => setConfiguringAccount(undefined)}
+                height={350}
+            >
+                <ConfigModal
+                    account={configuringAccount}
+                    onClose={() => setConfiguringAccount(undefined)}
+                />
+            </Rodal>
+        }
     </>;
 };
 
