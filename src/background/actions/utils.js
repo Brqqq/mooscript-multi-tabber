@@ -211,7 +211,8 @@ export const getPlayerInfo = async () => {
     const crew = pointShopDoc.querySelectorAll("body > script:nth-child(7)")[0].innerText.match(/label:"Crew", value:"(.*?)"/)[1].trim();
     // When there is a crew, it's wrapped inside anchor tags. And yes I use regex to extract the name. Deal with it.
     const crewName = crew === "None" ? crew : crew.match(/>(.*?)</)[1];
-
+    const isPaying = accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[8].innerText.trim() === "Yes";
+    
     return {
         cash: getCash(pointShopDoc),
         rank: pointShopDoc.querySelectorAll("body > script:nth-child(7)")[0].innerText.match(/label:"Rank", value:"(.*?)"/)[1],
@@ -220,7 +221,7 @@ export const getPlayerInfo = async () => {
 
         honor: +pointShopDoc.querySelectorAll("#text_container > table.userprof > tbody > tr > td.footer")[0].innerText.replace(/,/g, "").match(/\d+/)[0],
         credits: +pointShopDoc.querySelectorAll("#text_container > table.userprof > tbody > tr > td.footer")[2].innerText.replace(/,/g, "").match(/\d+/)[0],
-        payingDays: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[10].innerText.match(/\d+/)[0],
+        payingDays: isPaying ? accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[10].innerText.match(/\d+/)[0] : 0,
         country: getCurrentCountry(pointShopDoc),
         email: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[2].innerText,
         name: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[4].innerText,

@@ -8,7 +8,7 @@ import AccountList from "./AccountList";
 function App() {
 
     const onNewAccountAdded = (email, password) => {
-        chrome.extension.getBackgroundPage().addAccount(email.trim(), password.trim());
+        chrome.extension.getBackgroundPage().addAccount(email.trim().toLocaleLowerCase(), password.trim());
     }
 
     return (

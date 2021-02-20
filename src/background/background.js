@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { removeAccount, updateAccount, addAccount, updateEveryAccount, getFromStorage, setInStorage, initStorage, getAccounts } from "./storage.js";
+import { removeAccount, updateAccount, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -130,6 +130,8 @@ window.updateAccount = updateAccount;
 window.updateEveryAccount = updateEveryAccount;
 
 window.setInStorage = setInStorage;
+
+window.resetDrugRun = resetDrugRun;
 
 const gameLoop = async (action, ticksInSeconds) => {
     let lastLoopTime = new Date();

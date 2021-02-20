@@ -8,25 +8,30 @@ import Options from "./Options";
 
 const AccountList = (props) => {
     const [accounts, setAccounts] = React.useState({});
+    const [drugs, setDrugs] = React.useState({});
     const [configuringAccount, setConfiguringAccount] = React.useState(undefined);
 
-    const onAccountListChange = (changes) => {
+    const onStorageChanges = (changes) => {
         if (changes.accounts != null) {
             setAccounts(changes.accounts.newValue);
         }
+        if (changes.drugs != null) {
+            setDrugs(changes.drugs.newValue);
+        }
     }
 
-    React.useEffect(() => {
-        chrome.storage.local.onChanged.addListener(onAccountListChange);
 
+    React.useEffect(() => {
+        chrome.storage.local.onChanged.addListener(onStorageChanges);
         return () => {
-            chrome.storage.local.onChanged.removeListener(onAccountListChange);
+            chrome.storage.local.onChanged.removeListener(onStorageChanges);
         };
-    }, [onAccountListChange]);
+    }, [onStorageChanges]);
 
     React.useEffect(() => {
-        chrome.storage.local.get("accounts", ({ accounts }) => {
+        chrome.storage.local.get(["accounts", "drugs"], ({ accounts, drugs }) => {
             setAccounts(accounts || {});
+            setDrugs(drugs || {});
         })
     }, []);
 
@@ -69,8 +74,11 @@ const AccountList = (props) => {
         return <>{account.name}</>;
     }
 
+    const hasDrugRun = drugs?.run1 != null && drugs?.run2 != null;
+
     return <>
-        <Options accounts={accounts} />
+        <Options accounts={accounts} drugs={drugs} />
+        {hasDrugRun && <h2>DR: {drugs.run1.country} -> {drugs.run2.country}</h2>}
         <h3>Accounts</h3>
         <table>
             <thead>
@@ -107,8 +115,8 @@ const AccountList = (props) => {
                             </form>
                         </td>
                         <td>
-                            {account.active && <a href="#" alt="Pause script" onClick={() => setActive(email, false)}><img src={Pause} /></a>}
-                            {!account.active && <a href="#" alt="Start script" onClick={() => setActive(email, true)}><img src={Play} /></a>}
+                            {account.active && <button className="link-button" onClick={() => setActive(email, false)}><img src={Pause} /></button>}
+                            {!account.active && <button className="link-button" onClick={() => setActive(email, true)}><img src={Play} /></button>}
                         </td>
                         <td>
                             {account.active && "Running..."}

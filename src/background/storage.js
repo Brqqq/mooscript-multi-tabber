@@ -161,6 +161,16 @@ export const updateRun = (runNr, data) => {
     return setInStorage({ drugs: drugInfo });
 }
 
+export const resetDrugRun = async () => {
+    const { drugs } = await getFromStorage("drugs");
+    drugs.run1.country = "Unknown";
+    drugs.run1.date = "";
+    drugs.run2.country = "Unknown";
+    drugs.run2.date = "";
+
+    await setInStorage({ drugs });
+}
+
 
 
 export const getAccounts = () => accounts;

@@ -35,8 +35,15 @@ const ImportModal = props => {
             console.error(e);
             return;
         }
+
+        const lowercaseEmailedAccounts = Object.keys(json).reduce((acc, curr) => {
+            return {
+                ...acc,
+                [curr.toLocaleLowerCase()]: json[curr]
+            }
+        }, {});
         try {
-            await chrome.extension.getBackgroundPage().setInStorage({ accounts: json });
+            await chrome.extension.getBackgroundPage().setInStorage({ accounts: lowercaseEmailedAccounts });
         } catch (e) {
             alert("Something went wrong during the import");
             console.error(e);
@@ -81,6 +88,10 @@ const Options = props => {
     const setAllToActiveStatus = (newStatus) => {
         chrome.extension.getBackgroundPage().updateEveryAccount({ active: newStatus });;
     }
+    const resetDrugRun = () => {
+        chrome.extension.getBackgroundPage().resetDrugRun();
+    }
+
     return <div style={{ marginTop: 8}}>
         <button onClick={() => setAllToActiveStatus(false)}>Stop all</button>
         &nbsp;
@@ -89,6 +100,8 @@ const Options = props => {
         <button onClick={() => setShowExportModal(true)}>Export</button>
         &nbsp;
         <button onClick={() => setShowImportModal(true)}>Import</button>
+        &nbsp;
+        <button onClick={resetDrugRun}>Reset drug run</button>
 
         {showExportModal && <ExportModal accounts={props.accounts} onClose={() => setShowExportModal(false)} />}
         {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} />}

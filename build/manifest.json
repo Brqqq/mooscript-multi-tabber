@@ -1,22 +1,27 @@
 {
   "manifest_version": 2,
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "name": "Mooscript",
   "icons": {
     "16": "logo16.png",
     "64": "logo64.png",
     "128": "logo128.png"
   },
-  "name": "Mooscript",
   "description": "A script for mobstar.cc",
   "background": {
-    "page": "src/html/background.html"
+    "page": "background.html",
+    "persistent": true
   },
   "options_page": "index.html",
   "browser_action": {
-    "default_popup": "popup.html"
+    "default_title": "Options"
   },
+  
   "permissions": [
-    "tabs",
-    "storage"
+    "storage",
+    "cookies",
+    "webRequest",
+    "webRequestBlocking",
+    "https://www.mobstar.cc/*"
   ]
 }
