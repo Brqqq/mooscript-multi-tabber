@@ -1,13 +1,16 @@
 import { getPlayerInfo } from "./utils.js"
 import { updateAccount } from "../storage.js";
 
-const defaultCooldown = 1000 * 60 * 5;
+const defaultCooldown = 1000 * 60 * 2;
 
 export const savePlayerInfo = async () => {
     const playerInfo = await getPlayerInfo();
 
     const { email, ...rest } = playerInfo;
-    await updateAccount(email, rest);
+
+    // If we can get this data, then the user cannot be dead
+    const newData = { ...rest, dead: false };
+    await updateAccount(email, newData);
 
     return defaultCooldown;
 }

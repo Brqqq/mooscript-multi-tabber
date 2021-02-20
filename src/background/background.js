@@ -189,7 +189,8 @@ const start = async () => {
         lastItemsBought: 0,
         itemBuyingCooldown: 0,
 
-        hasCheckedWill: false
+        willCheckingCooldown: 0,
+        lastWillChecked: 0
     })
     const configs = {};
 
@@ -230,9 +231,10 @@ const start = async () => {
                 }
                 window.currentCookie = auth;
 
-                if (!config.hasCheckedWill) {
-                    await collectWill();
-                    config.hasCheckedWill = true;
+                const willCollectionResult = await performAction(collectWill, config.willCheckingCooldown, config.lastWillChecked);
+                if(willCollectionResult) {
+                    config.willCheckingCooldown = willCollectionResult;
+                    config.lastWillChecked = new Date().valueOf();
                 }
 
                 if (account.enableSmallCrime) {

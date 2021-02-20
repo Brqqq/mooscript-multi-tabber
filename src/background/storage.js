@@ -45,7 +45,18 @@ export const addAccount = async (email, password) => {
             enableCarSelling: true,
             enableItemBuying: true,
             enableDrugRunning: true,
-            enableDrugRunFinding: true
+            enableDrugRunFinding: true,
+            cash: 0,
+            rank: "",
+            crew: "",
+            bullets: 0,
+            honor: 0,
+            credits: 0,
+            payingDays: 0,
+            country: "",
+            name: "",
+            lead: ""
+
         }
     };
 

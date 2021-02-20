@@ -204,7 +204,7 @@ export const getPlayerInfo = async () => {
 
     // You might think: why don't you get the cash/rank/bullets/etc from that table on the top of most pages? Or just eval the JS that contains the data? Instead of the convoluted BS
     // Well, my dear imaginary asker, that table gets added dynamically with JS. We don't render the page, only get the raw HTML. So that table will be empty.
-    // Chrome extensions aren't allowed to call `eval` unless we hash-check the code. For good reason. Considering the data is dynamic, that's not a good option.
+    // Chrome extensions aren't allowed to call `eval` unless we hash-check the code. For good reason. Considering the data is dynamic, we cannot have a predetermined hash.
     // So instead we have to parse the JS on the page as text like a pleb
 
     const lead = leadDoc.querySelectorAll("form > b")[0];
@@ -212,7 +212,7 @@ export const getPlayerInfo = async () => {
     // When there is a crew, it's wrapped inside anchor tags. And yes I use regex to extract the name. Deal with it.
     const crewName = crew === "None" ? crew : crew.match(/>(.*?)</)[1];
     const isPaying = accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[8].innerText.trim() === "Yes";
-    
+
     return {
         cash: getCash(pointShopDoc),
         rank: pointShopDoc.querySelectorAll("body > script:nth-child(7)")[0].innerText.match(/label:"Rank", value:"(.*?)"/)[1],
