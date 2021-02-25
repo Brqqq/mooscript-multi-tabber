@@ -6,7 +6,7 @@ import { sortAccounts } from "./sorting";
 const Name = ({ account }) => {
     if (account.invalidPassword) {
         return <span style={{ color: "red" }}>Incorrect password!</span>
-    } else if (account.isDead) {
+    } else if (account.dead) {
         return <>
             {account.name}
             <span style={{ color: "red" }}>(DEAD)</span>

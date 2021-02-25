@@ -230,7 +230,7 @@ const start = async () => {
                     }
                 }
                 window.currentCookie = auth;
-
+                
                 const willCollectionResult = await performAction(collectWill, config.willCheckingCooldown, config.lastWillChecked);
                 if(willCollectionResult) {
                     config.willCheckingCooldown = willCollectionResult;
@@ -323,7 +323,7 @@ const start = async () => {
 
                 if (isDead(fetchRes.document)) {
                     await updateAccount(email, {
-                        isDead: true,
+                        dead: true,
                         active: false
                     });
                 }
