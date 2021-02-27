@@ -92,7 +92,13 @@ const Options = props => {
         chrome.extension.getBackgroundPage().resetDrugRun();
     }
 
+    const updateAllAccounts = () => {
+        chrome.extension.getBackgroundPage().addAccountsToUpdateList(Object.keys(props.accounts));
+    }
+
     return <div style={{ marginTop: 8}}>
+        <button onClick={updateAllAccounts}>Update all accounts</button>
+        &nbsp;
         <button onClick={() => setAllToActiveStatus(false)}>Stop all</button>
         &nbsp;
         <button onClick={() => setAllToActiveStatus(true)}>Start all</button>

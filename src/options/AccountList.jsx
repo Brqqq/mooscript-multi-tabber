@@ -38,6 +38,10 @@ const AccountList = (props) => {
         chrome.extension.getBackgroundPage().removeAccount(email);
     }
 
+    const onAddToAccountUpdateList = (email) => {
+        chrome.extension.getBackgroundPage().addAccountsToUpdateList([email]);
+    }
+
     const setActive = (email, isActive) => {
         chrome.extension.getBackgroundPage().updateAccount(email, {
             active: isActive
@@ -66,6 +70,7 @@ const AccountList = (props) => {
         <h3>Accounts</h3>
         {accountKeys.length === 0 && <div>You have no accounts on script.</div>}
         {accountKeys.length > 0 && <AccountTable
+            onAddToAccountUpdateList={onAddToAccountUpdateList}
             onRemove={onRemove}
             accounts={accounts}
             onScriptActiveChange={setActive}

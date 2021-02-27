@@ -1,5 +1,6 @@
 let accounts = {};
 let drugs = {};
+let config = {};
 
 export const getFromStorage = (keysToGet) => {
     return new Promise((resolve, reject) => {
@@ -88,6 +89,24 @@ export const updateAccount = async (email, updatedValues) => {
     return setInStorage({ accounts: newAccounts });
 }
 
+export const updateConfig = async (props) => {
+    const { config } = await getFromStorage("config");
+
+    const updatedConfig = {
+        ...config,
+        ...props
+    };
+
+    return setInStorage({ config: updatedConfig });
+}
+
+export const addAccountsToUpdateList = async (emails) => {
+    //const { config } = await getFromStorage("config");
+    const newList =[...new Set([...getConfig().updateAccounts, ...emails])];
+
+    return updateConfig({ updateAccounts: newList });
+}
+
 export const updateEveryAccount = async (updatedValues) => {
     const { accounts } = await getFromStorage("accounts");
     const arrayOfAccounts = Object.keys(accounts).map(email => ({
@@ -107,7 +126,7 @@ export const updateEveryAccount = async (updatedValues) => {
 }
 
 export const initStorage = async () => {
-    const result = await getFromStorage(["accounts", "drugs"]);
+    const result = await getFromStorage(["accounts", "drugs", "config"]);
 
     accounts = result.accounts || {};
     drugs = result.drugs || {
@@ -141,12 +160,19 @@ export const initStorage = async () => {
         }
     };
 
+    config = result.config || {
+        updateAccounts: []
+    };
+
     chrome.storage.local.onChanged.addListener((changes) => {
         if (changes.accounts != null) {
             accounts = changes.accounts.newValue;
         }
         if (changes.drugs != null) {
             drugs = changes.drugs.newValue;
+        }
+        if(changes.config != null) {
+            config = changes.config.newValue;
         }
     });
 }
@@ -186,3 +212,4 @@ export const resetDrugRun = async () => {
 
 export const getAccounts = () => accounts;
 export const getDrugsInfo = () => drugs;
+export const getConfig = () => config;

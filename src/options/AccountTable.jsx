@@ -52,8 +52,6 @@ const AccountTable = (props) => {
         sortAccounts(sortedAccounts, sortProp, isAsc);
     }
 
-    console.log(sortProp, isAsc);
-
     const SortButton = ({ prop, children }) => {
         let ascText = "";
         if (prop === sortProp) {
@@ -64,10 +62,13 @@ const AccountTable = (props) => {
             {children} {ascText}
         </button>
     }
+
+
     return <table>
         <thead>
             <tr>
                 <th></th>
+                <th>Update</th>
                 <th>Login</th>
                 <th>Start</th>
                 <th>Script status</th>
@@ -92,6 +93,14 @@ const AccountTable = (props) => {
                 return <tr key={email}>
                     <td>
                         {idx + 1}
+                    </td>
+                    <td>
+                        <button
+                            title="Tries to update your account info in this table as soon as possible"
+                            onClick={() => props.onAddToAccountUpdateList(email)}
+                        >
+                            Update
+                        </button>
                     </td>
                     <td>
                         <form method="post" action="https://www.mobstar.cc/main/login.php?mooscript=true" target="mobstar" onSubmit={(e) => onLogin(e, email)}>

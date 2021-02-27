@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { removeAccount, updateAccount, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts } from "./storage.js";
+import { removeAccount, updateAccount, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -133,6 +133,8 @@ window.setInStorage = setInStorage;
 
 window.resetDrugRun = resetDrugRun;
 
+window.addAccountsToUpdateList = addAccountsToUpdateList;
+
 const gameLoop = async (action, ticksInSeconds) => {
     let lastLoopTime = new Date();
 
@@ -143,9 +145,8 @@ const gameLoop = async (action, ticksInSeconds) => {
 
         if (timeLeftToWait > 0) {
             await new Promise(resolve => setTimeout(resolve, timeLeftToWait));
-        } else {
-            console.log("Loop took a little longer than expected...");
         }
+
         lastLoopTime = new Date();
     }
 
@@ -192,123 +193,116 @@ const start = async () => {
         willCheckingCooldown: 0,
         lastWillChecked: 0
     })
-    const configs = {};
+    const cooldownConfigs = {};
 
     const loop = async () => {
         const accounts = getAccounts();
+
         for (let email of Object.keys(accounts)) {
+            const config = getConfig();
+            if (config.updateAccounts.length > 0) {
+                break;
+            }
+
             const account = accounts[email];
             if (!account.active) {
                 continue;
             }
 
-            let config = configs[email];
+            let cooldownConfig = cooldownConfigs[email];
 
-            if (config == null) {
-                config = getDefaultConfig();
-                configs[email] = config;
+            if (cooldownConfig == null) {
+                cooldownConfig = getDefaultConfig();
+                cooldownConfigs[email] = cooldownConfig;
             }
 
             let auth = mobAuths[email];
 
             try {
                 if (auth == null) {
-                    auth = await fetchMobAuth(email, account.password);
-                    if (auth) {
-                        mobAuths[email] = auth;
-                        if (account.invalidPassword) {
-                            await updateAccount(email, {
-                                invalidPassword: false
-                            });
-                        }
-                    } else {
-                        await updateAccount(email, {
-                            invalidPassword: true,
-                            active: false
-                        });
-                        continue;
-                    }
+                    auth = await tryLogin(email, account, mobAuths);
+                    if (!auth) continue;
                 }
                 window.currentCookie = auth;
-                
-                const willCollectionResult = await performAction(collectWill, config.willCheckingCooldown, config.lastWillChecked);
-                if(willCollectionResult) {
-                    config.willCheckingCooldown = willCollectionResult;
-                    config.lastWillChecked = new Date().valueOf();
+
+                const willCollectionResult = await performAction(collectWill, cooldownConfig.willCheckingCooldown, cooldownConfig.lastWillChecked);
+                if (willCollectionResult) {
+                    cooldownConfig.willCheckingCooldown = willCollectionResult;
+                    cooldownConfig.lastWillChecked = new Date().valueOf();
                 }
 
                 if (account.enableSmallCrime) {
-                    const smallCrimeResult = await performAction(doSmallCrime, config.smallCrimeCooldown, config.lastSmallCrime);
+                    const smallCrimeResult = await performAction(doSmallCrime, cooldownConfig.smallCrimeCooldown, cooldownConfig.lastSmallCrime);
                     if (smallCrimeResult) {
-                        config.smallCrimeCooldown = smallCrimeResult;
-                        config.lastSmallCrime = new Date().valueOf();
+                        cooldownConfig.smallCrimeCooldown = smallCrimeResult;
+                        cooldownConfig.lastSmallCrime = new Date().valueOf();
                     }
                 }
 
                 if (account.enableGta) {
-                    const gtaResult = await performAction(doGta, config.gtaCooldown, config.lastGta);
+                    const gtaResult = await performAction(doGta, cooldownConfig.gtaCooldown, cooldownConfig.lastGta);
                     if (gtaResult) {
-                        config.gtaCooldown = gtaResult;
-                        config.lastGta = new Date().valueOf();
+                        cooldownConfig.gtaCooldown = gtaResult;
+                        cooldownConfig.lastGta = new Date().valueOf();
                     }
                 }
 
                 if (account.enableCarSelling) {
-                    const carSellingResult = await performAction(sellCars, config.carSellingCooldown, config.lastCarSelling);
+                    const carSellingResult = await performAction(sellCars, cooldownConfig.carSellingCooldown, cooldownConfig.lastCarSelling);
                     if (carSellingResult) {
-                        config.carSellingCooldown = carSellingResult;
-                        config.lastCarSelling = new Date().valueOf();
+                        cooldownConfig.carSellingCooldown = carSellingResult;
+                        cooldownConfig.lastCarSelling = new Date().valueOf();
                     }
                 }
 
                 if (account.enableItemBuying) {
-                    const itemBuyingResult = await performAction(buyItems, config.itemBuyingCooldown, config.lastItemsBought);
+                    const itemBuyingResult = await performAction(buyItems, cooldownConfig.itemBuyingCooldown, cooldownConfig.lastItemsBought);
                     if (itemBuyingResult) {
-                        config.itemBuyingCooldown = itemBuyingResult;
-                        config.lastItemsBought = new Date().valueOf();
+                        cooldownConfig.itemBuyingCooldown = itemBuyingResult;
+                        cooldownConfig.lastItemsBought = new Date().valueOf();
                     }
                 }
 
 
-                const leadCreationResult = await performAction(createLead, config.leadCreationCooldown, config.lastLeadCreation);
+                const leadCreationResult = await performAction(createLead, cooldownConfig.leadCreationCooldown, cooldownConfig.lastLeadCreation);
                 if (leadCreationResult) {
-                    config.leadCreationCooldown = leadCreationResult;
-                    config.lastLeadCreation = new Date().valueOf();
+                    cooldownConfig.leadCreationCooldown = leadCreationResult;
+                    cooldownConfig.lastLeadCreation = new Date().valueOf();
                 }
 
                 if (account.enableDrugRunning) {
-                    const drugDealResult = await performAction(doDrugDeal, config.drugDealingCooldown, config.lastDrugDeal);
+                    const drugDealResult = await performAction(doDrugDeal, cooldownConfig.drugDealingCooldown, cooldownConfig.lastDrugDeal);
                     if (drugDealResult) {
-                        config.drugDealingCooldown = drugDealResult;
-                        config.lastDrugDeal = new Date().valueOf();
+                        cooldownConfig.drugDealingCooldown = drugDealResult;
+                        cooldownConfig.lastDrugDeal = new Date().valueOf();
                     }
                 }
 
                 if (account.enableDrugRunFinding) {
-                    const drugFindResult = await performAction(findDrugRun, config.drugFindCooldown, config.lastDrugFind);
+                    const drugFindResult = await performAction(findDrugRun, cooldownConfig.drugFindCooldown, cooldownConfig.lastDrugFind);
                     if (drugFindResult) {
-                        config.drugFindCooldown = drugFindResult;
-                        config.lastDrugFind = new Date().valueOf();
+                        cooldownConfig.drugFindCooldown = drugFindResult;
+                        cooldownConfig.lastDrugFind = new Date().valueOf();
                     }
                 }
 
-                const savePlayerResult = await performAction(savePlayerInfo, config.playerSaveCooldown, config.lastPlayerSaved);
+                const savePlayerResult = await performAction(savePlayerInfo, cooldownConfig.playerSaveCooldown, cooldownConfig.lastPlayerSaved);
                 if (savePlayerResult) {
-                    config.playerSaveCooldown = savePlayerResult;
-                    config.lastPlayerSaved = new Date().valueOf();
+                    cooldownConfig.playerSaveCooldown = savePlayerResult;
+                    cooldownConfig.lastPlayerSaved = new Date().valueOf();
                 }
 
                 if (account.enableJailbusting) {
-                    const jailBustResult = await performAction(doJailbust, config.jailBustCooldown, config.lastJailBust);
+                    const jailBustResult = await performAction(doJailbust, cooldownConfig.jailBustCooldown, cooldownConfig.lastJailBust);
                     if (jailBustResult) {
-                        config.jailBustCooldown = jailBustResult;
-                        config.lastJailBust = new Date().valueOf();
+                        cooldownConfig.jailBustCooldown = jailBustResult;
+                        cooldownConfig.lastJailBust = new Date().valueOf();
                     }
                 }
 
                 await sleep(1000);
             } catch (e) {
-                let fetchRes
+                let fetchRes;
                 try {
                     fetchRes = await getDoc(Routes.TestPage);
                 } catch (innerEx) {
@@ -328,20 +322,7 @@ const start = async () => {
                     });
                 }
                 else if (isLoggedOut(fetchRes.result)) {
-                    auth = await fetchMobAuth(email, account.password);
-                    if (auth) {
-                        mobAuths[email] = auth;
-                        if (account.invalidPassword) {
-                            await updateAccount(email, {
-                                invalidPassword: false
-                            });
-                        }
-                    } else {
-                        await updateAccount(email, {
-                            invalidPassword: true,
-                            active: false
-                        });
-                    }
+                    await tryLogin(email, account, mobAuths);
                 } else if (isInJail(fetchRes.result)) {
                     // Do nothing
                 }
@@ -352,9 +333,102 @@ const start = async () => {
                 }
             }
         }
+
+        const config = getConfig();
+        if (config.updateAccounts.length > 0) {
+
+            const accountsToUpdate = config.updateAccounts.reduce((acc, email) => {
+                return {
+                    ...acc,
+                    [email]: accounts[email]
+                }
+            }, {});
+
+            for (let email of Object.keys(accountsToUpdate)) {
+                let attempt = 0;
+                const maxAttempts = 3;
+
+                do {
+                    attempt++;
+                    const account = accounts[email];
+                    let auth = mobAuths[email];
+
+                    try {
+                        if (auth == null) {
+                            auth = await tryLogin(email, account, mobAuths);
+                            if (!auth) continue;
+                        }
+                        window.currentCookie = auth;
+
+                        await performAction(savePlayerInfo, 0, 0);
+                        attempt = maxAttempts;
+
+                    } catch (e) {
+                        let fetchRes;
+                        try {
+                            fetchRes = await getDoc(Routes.TestPage);
+                        } catch (innerEx) {
+                            console.log("Error with connecting to mobstar");
+                            console.log("Initial error")
+                            console.error(e);
+                            console.log("Mobstar connection exception")
+                            console.error(innerEx);
+                            await sleep(5000);
+                            continue;
+                        }
+
+                        if (isDead(fetchRes.document)) {
+                            await updateAccount(email, {
+                                dead: true,
+                                active: false
+                            });
+                        }
+                        else if (isLoggedOut(fetchRes.result)) {
+                            await tryLogin(email, account, mobAuths);
+                        } else if (isInJail(fetchRes.result)) {
+                            // Do nothing
+                        }
+                        else {
+                            console.error("Unknown error with user: " + email);
+                            console.error(e);
+                            console.error(fetchRes);
+                        }
+                    }
+                } while (attempt < maxAttempts)
+            }
+
+            updateConfig({ updateAccounts: [] });
+        }
     };
 
     gameLoop(loop, 30)
+}
+
+const tryLogin = async (email, account, mobAuths) => {
+    let attempt = 0;
+    const maxAttempts = 3;
+    do {
+        const auth = await fetchMobAuth(email, account.password);
+        if (auth) {
+            mobAuths[email] = auth;
+            if (account.invalidPassword) {
+                await updateAccount(email, {
+                    invalidPassword: false
+                });
+            }
+
+            return auth;
+        }
+        await sleep(1000 * (attempt + 1));
+        attempt++;
+    } while (attempt < maxAttempts);
+
+    await updateAccount(email, {
+        invalidPassword: true,
+        active: false
+    });
+
+    return false;
 }
 
 start();
