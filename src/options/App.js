@@ -13,6 +13,7 @@ function App() {
 
     return (
         <div className="App">
+            <a href="https://www.buymeacoffee.com/mooscript" target="_blank">☕ Buy me a coffee and support my work!</a>
             <NewUser onSubmit={onNewAccountAdded} />
 
             <AccountList />
