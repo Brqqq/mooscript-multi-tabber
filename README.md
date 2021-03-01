@@ -65,7 +65,7 @@ None of this data is shared with anyone or anywhere, except mobstar.cc itself.
 
 We look at all mobstar.cc http requests and identify which ones originate from the extension. Any Set-Cookie response headers are stripped out, as they would interfere with other tabs. When the script tries to log your account in, it receives a mob auth cookie. It looks for this cookie in each response header for API calls made by the extension and stores this cookie in (non persistent) memory. It reuses this cookie for each action it performs on your behalf.
 
-When you use the "login" button on the extension, it retrieves this in-memory cookie and sets it for your entire browser. This way you're the script is sharing its login cookie with the user, so that they don't interfere with each other and create new sessions (that log each other out). However, when an account has no script running and you try to log it in, then there is no in-memory cookie to retrieve so it will log you in the normal way.
+When you use the "login" button on the extension, it retrieves this in-memory cookie and sets it for your entire browser. This way the script is sharing its login cookie with the user, so that they don't interfere with each other and create new sessions (that log each other out). However, when an account has no script running and you try to log it in, then there is no in-memory cookie to retrieve so it will log you in the normal way.
 
 ### General flow of the script
 
