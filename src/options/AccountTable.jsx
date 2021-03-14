@@ -64,7 +64,7 @@ const AccountTable = (props) => {
     }
 
 
-    return <table>
+    return <table id="accounts">
         <thead>
             <tr>
                 <th></th>
@@ -120,7 +120,7 @@ const AccountTable = (props) => {
                         {!account.active && "Paused"}
                     </td>
                     <td>
-                        <a href="#" onClick={() => setConfiguringAccount({ email, account })}>Configure</a>
+                        <button className="link-button" onClick={() => setConfiguringAccount({ email, account })}>Configure</button>
                     </td>
                     <td>{email}</td>
                     <td><Name account={account} /></td>
