@@ -1,6 +1,27 @@
 .App {
   text-align: center;
 }
+.composite-icon {
+  position: relative;
+}
+
+img.icon {
+  width: 1.8em;
+  height: 1.8em;
+}
+
+.small-icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.composite-icon img.icon.layered {
+  width: 1.9em;
+  height: 1.9em;
+  position: absolute;
+  top: 3px;
+  left: 7px;
+}
 
 body {
   background-color: #F4F7F5;
@@ -9,10 +30,18 @@ body {
 table {
   margin-left: auto;
   margin-right: auto;
+  border-collapse: collapse;
+  text-align: left;
 }
 
 td {
   padding: 4px 8px 4px 8px;
+  border: 1px solid #ded5c3;
+}
+
+th {
+  padding: 4px 8px 4px 8px;
+  border: 1px solid #ded5c3;
 }
 
 .App-logo {

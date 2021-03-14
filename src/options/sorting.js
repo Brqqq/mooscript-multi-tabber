@@ -36,9 +36,21 @@ const rankSort = (accountList, propToCompare, isAsc) => {
     return isAsc ? sorted : sorted.reverse();
 }
 
+const booleanSort = (accountList, propToCompare, isAsc) => {
+    const sorted = accountList
+        .sort((a, b) => {
+            if(a[propToCompare] === true && b[propToCompare] === true) return 0;
+            if(a[propToCompare] === true) return -1;
+            if(b[propToCompare] === true) return 1;
+        });
+
+    return isAsc ? sorted.reverse() : sorted;
+}
+
 
 const numericalProps = ["cash", "bullets", "lead", "payingDays", "honor", "credits"];
 const alphabeticalProps = ["email", "name", "crew", "country"];
+const booleanProps = ["enableJailbusting", "enableSmallCrime", "enableGta", "enableCarSelling", "enableItemBuying", "enableDrugRunning", "enableDrugRunFinding", "enableBuyingPbf"];
 export const sortAccounts = (accountList, propToSort, isAsc) => {
     if(numericalProps.includes(propToSort)) {
         return sortNumbers(accountList, propToSort, isAsc);
@@ -47,9 +59,11 @@ export const sortAccounts = (accountList, propToSort, isAsc) => {
         return sortAlphabetically(accountList, propToSort, isAsc, zeroValue);
     } else if(propToSort === "rank") {
         return rankSort(accountList, propToSort, isAsc);
+    } else if(booleanProps.includes(propToSort)) {
+        return booleanSort(accountList, propToSort, isAsc);
     }
     else {
-        console.log("Unknown prop: " + propToSort);
+        console.error("Unknown prop " + propToSort)
     }
 
     return accountList;

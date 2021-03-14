@@ -7,8 +7,7 @@ export const buyItems = async (account) => {
         "weapon",
         "protection",
         "plane",
-        "plf",
-        "pbf"
+        "plf"
     ];
 
     const { document: inventoryDoc } = await getDoc(Routes.Inventory);
@@ -64,7 +63,9 @@ export const buyItems = async (account) => {
             price: bulletFactoryPrice,
             body: bulletFactoryBuyBody,
             current: bulletFactory
-        })
+        });
+
+        buyOrder.push("pbf");
     }
 
     // Margin is so you don't spend all your money and won't be able to do drug runs
