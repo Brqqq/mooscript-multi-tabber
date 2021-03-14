@@ -1,5 +1,6 @@
 import { Routes } from "./routes.js"
 import { getDoc, postForm, parseManageCarsList, getCurrentCountry } from "./utils.js";
+import { getDrugsInfo } from "../storage.js"
 
 const cooldownInMs = 7 * 60 * 1000;
 const extraTime = 5000;
@@ -7,8 +8,11 @@ const extraTime = 5000;
 const totalCooldown = cooldownInMs + extraTime;
 
 export const doGta = async () => {
-    // TODO: make these drug run countries
-    const shippingCountries = ["Colombia", "United States"];
+    const drugsData = getDrugsInfo();
+    let shippingCountries = [
+        drugsData.run1.country || "Colombia",
+        drugsData.run2.country || "United States"
+    ];
     const { document: gtaPageDoc } = await getDoc(Routes.CarStealing);
 
     if (gtaPageDoc.documentElement.innerText.includes("is only available for paying members")) {
@@ -42,7 +46,7 @@ export const doGta = async () => {
 
     // Success
     if (stealResultDoc.actualUrl === Routes.ManageCars) {
-        const valuableCars = ["Lamborghini Gallardo", "Armored Van"];
+        const valuableCars = ["Lamborghini Gallardo", "Armored Van", "Chrysler ME412"];
 
         const allCars = parseManageCarsList(stealResultDoc);
         const currentCountry = getCurrentCountry(stealResultDoc);

@@ -66,7 +66,7 @@ const AccountList = (props) => {
     const accountKeys = Object.keys(accounts);
     return <>
         <Options accounts={accounts} drugs={drugs} />
-        {hasDrugRun && <h2>DR: {drugs.run1.country} -> {drugs.run2.country}</h2>}
+        {hasDrugRun && <h2>DR: {drugs.run1.country || "<unknown>"} -> {drugs.run2.country || "<unknown>"}</h2>}
         <h3>Accounts</h3>
         {accountKeys.length === 0 && <div>You have no accounts on script.</div>}
         {accountKeys.length > 0 && <AccountTable

@@ -161,7 +161,8 @@ export const initStorage = async () => {
     };
 
     config = result.config || {
-        updateAccounts: []
+        updateAccounts: [],
+        dontSellCars: []
     };
 
     chrome.storage.local.onChanged.addListener((changes) => {
@@ -200,9 +201,9 @@ export const updateRun = (runNr, data) => {
 
 export const resetDrugRun = async () => {
     const { drugs } = await getFromStorage("drugs");
-    drugs.run1.country = "Unknown";
+    drugs.run1.country = "";
     drugs.run1.date = "";
-    drugs.run2.country = "Unknown";
+    drugs.run2.country = "";
     drugs.run2.date = "";
 
     await setInStorage({ drugs });

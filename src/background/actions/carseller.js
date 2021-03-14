@@ -6,7 +6,7 @@ const cooldownInMs = 120 * 60 * 1000;
 
 export const sellCars = async () => {
     //TODO: dontsellcarslist from config
-    const dontSellCarsList = ["Armored Van"];
+    const dontSellCarsList = ["Armored Van", "Chrysler ME412"];
     const { document: garagePage } = await getDoc(Routes.ManageCars);
     const currentCountry = getCurrentCountry(garagePage);
 
