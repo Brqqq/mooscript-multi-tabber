@@ -1,5 +1,4 @@
 const sortAlphabetically = (accountList, propToCompare, isAsc, zeroValue) => {
-    console.log(zeroValue)
     const sorted = accountList
         .sort((a, b) => {
             if(a[propToCompare] === zeroValue && b[propToCompare] === zeroValue) return 0;

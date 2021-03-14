@@ -152,9 +152,9 @@ const gameLoop = async (action, ticksInSeconds) => {
 
 }
 
-const performAction = (action, cooldown, lastActionInMs) => {
+const performAction = (action, account, cooldown, lastActionInMs) => {
     if (lastActionInMs + cooldown < new Date().valueOf()) {
-        return action();
+        return action(account);
     }
     return false;
 }
@@ -225,14 +225,14 @@ const start = async () => {
                 }
                 window.currentCookie = auth;
 
-                const willCollectionResult = await performAction(collectWill, cooldownConfig.willCheckingCooldown, cooldownConfig.lastWillChecked);
+                const willCollectionResult = await performAction(collectWill, account, cooldownConfig.willCheckingCooldown, cooldownConfig.lastWillChecked);
                 if (willCollectionResult) {
                     cooldownConfig.willCheckingCooldown = willCollectionResult;
                     cooldownConfig.lastWillChecked = new Date().valueOf();
                 }
 
                 if (account.enableSmallCrime) {
-                    const smallCrimeResult = await performAction(doSmallCrime, cooldownConfig.smallCrimeCooldown, cooldownConfig.lastSmallCrime);
+                    const smallCrimeResult = await performAction(doSmallCrime, account, cooldownConfig.smallCrimeCooldown, cooldownConfig.lastSmallCrime);
                     if (smallCrimeResult) {
                         cooldownConfig.smallCrimeCooldown = smallCrimeResult;
                         cooldownConfig.lastSmallCrime = new Date().valueOf();
@@ -240,7 +240,7 @@ const start = async () => {
                 }
 
                 if (account.enableGta) {
-                    const gtaResult = await performAction(doGta, cooldownConfig.gtaCooldown, cooldownConfig.lastGta);
+                    const gtaResult = await performAction(doGta, account, cooldownConfig.gtaCooldown, cooldownConfig.lastGta);
                     if (gtaResult) {
                         cooldownConfig.gtaCooldown = gtaResult;
                         cooldownConfig.lastGta = new Date().valueOf();
@@ -248,7 +248,7 @@ const start = async () => {
                 }
 
                 if (account.enableCarSelling) {
-                    const carSellingResult = await performAction(sellCars, cooldownConfig.carSellingCooldown, cooldownConfig.lastCarSelling);
+                    const carSellingResult = await performAction(sellCars, account, cooldownConfig.carSellingCooldown, cooldownConfig.lastCarSelling);
                     if (carSellingResult) {
                         cooldownConfig.carSellingCooldown = carSellingResult;
                         cooldownConfig.lastCarSelling = new Date().valueOf();
@@ -256,7 +256,7 @@ const start = async () => {
                 }
 
                 if (account.enableItemBuying) {
-                    const itemBuyingResult = await performAction(buyItems, cooldownConfig.itemBuyingCooldown, cooldownConfig.lastItemsBought);
+                    const itemBuyingResult = await performAction(buyItems, account, cooldownConfig.itemBuyingCooldown, cooldownConfig.lastItemsBought);
                     if (itemBuyingResult) {
                         cooldownConfig.itemBuyingCooldown = itemBuyingResult;
                         cooldownConfig.lastItemsBought = new Date().valueOf();
@@ -264,14 +264,14 @@ const start = async () => {
                 }
 
 
-                const leadCreationResult = await performAction(createLead, cooldownConfig.leadCreationCooldown, cooldownConfig.lastLeadCreation);
+                const leadCreationResult = await performAction(createLead, account, cooldownConfig.leadCreationCooldown, cooldownConfig.lastLeadCreation);
                 if (leadCreationResult) {
                     cooldownConfig.leadCreationCooldown = leadCreationResult;
                     cooldownConfig.lastLeadCreation = new Date().valueOf();
                 }
 
                 if (account.enableDrugRunning) {
-                    const drugDealResult = await performAction(doDrugDeal, cooldownConfig.drugDealingCooldown, cooldownConfig.lastDrugDeal);
+                    const drugDealResult = await performAction(doDrugDeal, account, cooldownConfig.drugDealingCooldown, cooldownConfig.lastDrugDeal);
                     if (drugDealResult) {
                         cooldownConfig.drugDealingCooldown = drugDealResult;
                         cooldownConfig.lastDrugDeal = new Date().valueOf();
@@ -279,21 +279,21 @@ const start = async () => {
                 }
 
                 if (account.enableDrugRunFinding) {
-                    const drugFindResult = await performAction(findDrugRun, cooldownConfig.drugFindCooldown, cooldownConfig.lastDrugFind);
+                    const drugFindResult = await performAction(findDrugRun, account, cooldownConfig.drugFindCooldown, cooldownConfig.lastDrugFind);
                     if (drugFindResult) {
                         cooldownConfig.drugFindCooldown = drugFindResult;
                         cooldownConfig.lastDrugFind = new Date().valueOf();
                     }
                 }
 
-                const savePlayerResult = await performAction(savePlayerInfo, cooldownConfig.playerSaveCooldown, cooldownConfig.lastPlayerSaved);
+                const savePlayerResult = await performAction(savePlayerInfo, account, cooldownConfig.playerSaveCooldown, cooldownConfig.lastPlayerSaved);
                 if (savePlayerResult) {
                     cooldownConfig.playerSaveCooldown = savePlayerResult;
                     cooldownConfig.lastPlayerSaved = new Date().valueOf();
                 }
 
                 if (account.enableJailbusting) {
-                    const jailBustResult = await performAction(doJailbust, cooldownConfig.jailBustCooldown, cooldownConfig.lastJailBust);
+                    const jailBustResult = await performAction(doJailbust, account, cooldownConfig.jailBustCooldown, cooldownConfig.lastJailBust);
                     if (jailBustResult) {
                         cooldownConfig.jailBustCooldown = jailBustResult;
                         cooldownConfig.lastJailBust = new Date().valueOf();

@@ -2,12 +2,13 @@ import { Routes } from "./routes.js"
 import { getDoc, postForm, getCash } from "./utils.js";
 const boughtCooldown = 3 * 60 * 60 * 1000;
 const noMoneyCooldown = 15 * 60 * 1000;
-export const buyItems = async () => {
+export const buyItems = async (account) => {
     const buyOrder = [
         "weapon",
         "protection",
         "plane",
-        "plf"
+        "plf",
+        "pbf"
     ];
 
     const { document: inventoryDoc } = await getDoc(Routes.Inventory);
@@ -28,6 +29,10 @@ export const buyItems = async () => {
     const leadFactory = inventoryDoc.getElementById("plfdata").innerText;
     const leadFactoryPrice = 800_000;
     const leadFactoryBuyBody = ["item=plf", "buyplf=1", "buy=Buy this leadfactory", "buywhat=plf"].join("&");
+
+    const bulletFactory = inventoryDoc.getElementById("pbfdata").innerText;
+    const bulletFactoryPrice = 8_000_000;
+    const bulletFactoryBuyBody = ["item=pbf", "buypbf=1", "buy=Buy this bulletfactory", "buywhat=pbf"].join("&");
 
     const itemsData = [
         {
@@ -52,6 +57,15 @@ export const buyItems = async () => {
             current: leadFactory
         }
     ];
+
+    if(account.enableBuyingPbf) {
+        itemsData.push({
+            buyItem: "pbf",
+            price: bulletFactoryPrice,
+            body: bulletFactoryBuyBody,
+            current: bulletFactory
+        })
+    }
 
     // Margin is so you don't spend all your money and won't be able to do drug runs
     const margin = 200_000;
