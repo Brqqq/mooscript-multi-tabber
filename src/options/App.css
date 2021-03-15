@@ -134,3 +134,18 @@ th {
   text-decoration: underline;
   cursor: pointer;
 }
+
+#type-select {
+  background: inherit;
+  color: gray;
+  padding-left: 5px;
+  font-size: 14px;
+  border: none;
+}
+
+#type-select option {
+  display: flex;
+  white-space: pre;
+  min-height: 20px;
+  padding: 0px 2px 1px;
+}

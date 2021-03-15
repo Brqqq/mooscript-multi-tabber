@@ -16,6 +16,7 @@ import Descending from "./icons/descending.svg"
 import DefaultSort from "./icons/sort-result.svg"
 
 import { sortAccounts } from "./sorting";
+import TypeChooser from "./TypeChooser";
 
 const Name = ({ account }) => {
     if (account.invalidPassword) {
@@ -90,21 +91,30 @@ const AccountTable = (props) => {
             if (isAsc === true) sortIcon = Ascending;
             else if (isAsc === false) sortIcon = Descending;
         }
-        //return <span style={{ display: "flex" }}>
-        return <button style={{ width: "100%"}} className="link-button" onClick={() => sortOnProp(prop)}>
+
+        return <button style={{ width: "100%" }} className="link-button" onClick={() => sortOnProp(prop)}>
             <span style={{ display: "flex" }}>
                 {children}
                 <span style={{ flexGrow: 1 }}></span>
                 <img className="small-icon" src={sortIcon} />
             </span>
         </button>
-        //</span>
+    }
+
+    const onTypeChange = (account, email, newType) => {
+        const newAccount = {
+            ...account,
+            type: newType
+        };
+
+        chrome.extension.getBackgroundPage().updateAccount(email, newAccount);
     }
 
     return <table id="accounts">
         <thead>
             <tr>
                 <th></th>
+                <th><SortButton prop="type">Type</SortButton></th>
                 <th>Update</th>
                 <th>Login</th>
                 <th>Start</th>
@@ -137,6 +147,9 @@ const AccountTable = (props) => {
                 return <tr key={email}>
                     <td>
                         {idx + 1}
+                    </td>
+                    <td>
+                        <TypeChooser onChange={(newType) => onTypeChange(account, email, newType)} value={account.type} />
                     </td>
                     <td>
                         <button

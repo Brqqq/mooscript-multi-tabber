@@ -1,11 +1,14 @@
-const sortAlphabetically = (accountList, propToCompare, isAsc, zeroValue) => {
+const sortAlphabetically = (accountList, propToCompare, isAsc, zeroValue, defaultValue) => {
     const sorted = accountList
         .sort((a, b) => {
-            if(a[propToCompare] === zeroValue && b[propToCompare] === zeroValue) return 0;
-            else if(a[propToCompare] === zeroValue) return 1;
-            else if(b[propToCompare] === zeroValue) return -1;
+            const aPropToCompare = a[propToCompare] || defaultValue;
+            const bPropToCompare = b[propToCompare] || defaultValue;
 
-            return a[propToCompare]?.toString().localeCompare(b[propToCompare].toString())
+            if(aPropToCompare === zeroValue && bPropToCompare === zeroValue) return 0;
+            else if(aPropToCompare === zeroValue) return 1;
+            else if(bPropToCompare === zeroValue) return -1;
+
+            return aPropToCompare?.toString().localeCompare(bPropToCompare.toString())
         });
     
     return isAsc ? sorted : sorted.reverse();
@@ -49,14 +52,23 @@ const booleanSort = (accountList, propToCompare, isAsc) => {
 
 
 const numericalProps = ["cash", "bullets", "lead", "payingDays", "honor", "credits"];
-const alphabeticalProps = ["email", "name", "crew", "country"];
+const alphabeticalProps = ["email", "name", "crew", "country", "type"];
 const booleanProps = ["enableJailbusting", "enableSmallCrime", "enableGta", "enableCarSelling", "enableItemBuying", "enableDrugRunning", "enableDrugRunFinding", "enableBuyingPbf"];
+
 export const sortAccounts = (accountList, propToSort, isAsc) => {
     if(numericalProps.includes(propToSort)) {
         return sortNumbers(accountList, propToSort, isAsc);
     } else if(alphabeticalProps.includes(propToSort)) {
-        let zeroValue = propToSort === "crew" ? "None" : undefined;
-        return sortAlphabetically(accountList, propToSort, isAsc, zeroValue);
+        let zeroValue = undefined;
+        let defaultValue = undefined;
+
+        if(propToSort === "crew") zeroValue = "None";
+        if(propToSort === "type") {
+            zeroValue = "⭕";
+            defaultValue = "⭕";
+        }
+        
+        return sortAlphabetically(accountList, propToSort, isAsc, zeroValue, defaultValue);
     } else if(propToSort === "rank") {
         return rankSort(accountList, propToSort, isAsc);
     } else if(booleanProps.includes(propToSort)) {

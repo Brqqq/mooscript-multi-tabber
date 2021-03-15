@@ -64,9 +64,18 @@ const AccountList = (props) => {
 
     const hasDrugRun = drugs?.run1 != null && drugs?.run2 != null;
     const accountKeys = Object.keys(accounts);
+    const totalCash = accountKeys.reduce((acc, curr) => {
+        if (Number.isInteger(accounts[curr].cash)) {
+            return acc + accounts[curr].cash;
+        }
+
+        return acc;
+    }, 0);
+
     return <>
         <Options accounts={accounts} drugs={drugs} />
         {hasDrugRun && <h2>DR: {drugs.run1.country || "<unknown>"} -> {drugs.run2.country || "<unknown>"}</h2>}
+        <h2>Total cash: € {totalCash.toLocaleString()}</h2>
         <h3>All accounts</h3>
         {accountKeys.length === 0 && <div>You have no accounts on script.</div>}
         {accountKeys.length > 0 && <AccountTable

@@ -57,8 +57,8 @@ export const addAccount = async (email, password) => {
             payingDays: 0,
             country: "",
             name: "",
-            lead: ""
-
+            lead: "",
+            type: "⭕"
         }
     };
 
@@ -102,7 +102,6 @@ export const updateConfig = async (props) => {
 }
 
 export const addAccountsToUpdateList = async (emails) => {
-    //const { config } = await getFromStorage("config");
     const newList =[...new Set([...getConfig().updateAccounts, ...emails])];
 
     return updateConfig({ updateAccounts: newList });
@@ -209,8 +208,6 @@ export const resetDrugRun = async () => {
 
     await setInStorage({ drugs });
 }
-
-
 
 export const getAccounts = () => accounts;
 export const getDrugsInfo = () => drugs;
