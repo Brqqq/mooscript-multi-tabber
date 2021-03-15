@@ -53,7 +53,7 @@ const booleanSort = (accountList, propToCompare, isAsc) => {
 
 const numericalProps = ["cash", "bullets", "lead", "payingDays", "honor", "credits"];
 const alphabeticalProps = ["email", "name", "crew", "country", "type"];
-const booleanProps = ["enableJailbusting", "enableSmallCrime", "enableGta", "enableCarSelling", "enableItemBuying", "enableDrugRunning", "enableDrugRunFinding", "enableBuyingPbf"];
+const booleanProps = ["enableJailbusting", "enableSmallCrime", "enableGta", "enableCarSelling", "enableItemBuying", "enableDrugRunning", "enableBuyingPbf"];
 
 export const sortAccounts = (accountList, propToSort, isAsc) => {
     if(numericalProps.includes(propToSort)) {
@@ -67,7 +67,7 @@ export const sortAccounts = (accountList, propToSort, isAsc) => {
             zeroValue = "⭕";
             defaultValue = "⭕";
         }
-        
+
         return sortAlphabetically(accountList, propToSort, isAsc, zeroValue, defaultValue);
     } else if(propToSort === "rank") {
         return rankSort(accountList, propToSort, isAsc);

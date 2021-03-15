@@ -278,7 +278,7 @@ const start = async () => {
                     }
                 }
 
-                if (account.enableDrugRunFinding) {
+                if (account.enableDrugRunning) {
                     const drugFindResult = await performAction(findDrugRun, account, cooldownConfig.drugFindCooldown, cooldownConfig.lastDrugFind);
                     if (drugFindResult) {
                         cooldownConfig.drugFindCooldown = drugFindResult;

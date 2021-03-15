@@ -18,6 +18,12 @@ import DefaultSort from "./icons/sort-result.svg"
 import { sortAccounts } from "./sorting";
 import TypeChooser from "./TypeChooser";
 
+const jailBustingIcon = <img title="Jail busting" className="icon" src={Handcuffs} />;
+const smallCrimeIcon = <img title="Small crimes" className="icon" src={Thief} />;
+const gtaIcon = <img title="GTA" className="icon" src={SedanCar} />;
+const carSellingIcon = <img title="Car seller" className="icon" src={Sold} />;
+const buyItemsIcon = <img title="Item buyer" className="icon" src={Buy} />;
+
 const Name = ({ account }) => {
     if (account.invalidPassword) {
         return <span style={{ color: "red" }}>Incorrect password!</span>
@@ -119,13 +125,12 @@ const AccountTable = (props) => {
                 <th>Login</th>
                 <th>Start</th>
                 <th>Script status</th>
-                <th><SortButton prop="enableJailbusting"><img title="Jail busting" className="icon" src={Handcuffs} /></SortButton></th>
-                <th><SortButton prop="enableSmallCrime"><img title="Small crimes" className="icon" src={Thief} /></SortButton></th>
-                <th><SortButton prop="enableGta"><img title="GTA" className="icon" src={SedanCar} /></SortButton></th>
-                <th><SortButton prop="enableCarSelling"><img title="Car seller" className="icon" src={Sold} /></SortButton></th>
-                <th><SortButton prop="enableItemBuying"><img title="Item buyer" className="icon" src={Buy} /></SortButton></th>
+                <th><SortButton prop="enableJailbusting">{jailBustingIcon}</SortButton></th>
+                <th><SortButton prop="enableSmallCrime">{smallCrimeIcon}</SortButton></th>
+                <th><SortButton prop="enableGta">{gtaIcon}</SortButton></th>
+                <th><SortButton prop="enableCarSelling">{carSellingIcon}</SortButton></th>
+                <th><SortButton prop="enableItemBuying">{buyItemsIcon}</SortButton></th>
                 <th><SortButton prop="enableDrugRunning"><img title="Drug dealing" className="icon" src={Marijuana} /></SortButton></th>
-                <th><SortButton prop="enableDrugRunFinding"><img title="Drug run finding" className="icon" src={Search} /></SortButton></th>
                 <th><SortButton prop="enableBuyingPbf"><img title="Buy personal bullet factory" className="icon" src={Factory} /></SortButton></th>
                 <th><SortButton prop="email">Email</SortButton></th>
                 <th><SortButton prop="name">Name</SortButton></th>
@@ -193,9 +198,6 @@ const AccountTable = (props) => {
                     </td>
                     <td className="composite-icon">
                         <ConfigIcon title="Sell drugs" svg={Marijuana} propName="enableDrugRunning" email={email} account={account} />
-                    </td>
-                    <td className="composite-icon">
-                        <ConfigIcon title="Search drug run" svg={Search} propName="enableDrugRunFinding" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
                         <ConfigIcon title="Personal bullet factory" svg={Factory} propName="enableBuyingPbf" email={email} account={account} />

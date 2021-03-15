@@ -13,7 +13,6 @@ const ConfigModal = props => {
             enableCarSelling,
             enableItemBuying,
             enableDrugRunning,
-            enableDrugRunFinding,
             enableBuyingPbf
         } = account;
 
@@ -24,7 +23,6 @@ const ConfigModal = props => {
             enableCarSelling,
             enableItemBuying,
             enableDrugRunning,
-            enableDrugRunFinding,
             enableBuyingPbf
         };
 
@@ -42,7 +40,7 @@ const ConfigModal = props => {
 
     const onPropToggle = (propName) => {
         const newValue = account[propName] == null || account[propName] === false;
-        console.log(newValue);
+
         const newAccount = {
             ...account,
             [propName]: newValue
@@ -94,13 +92,6 @@ const ConfigModal = props => {
                             <input type="checkbox" checked={account.enableDrugRunning || false} onChange={() => onPropToggle("enableDrugRunning")} />
                         </td>
                     </tr>
-                    <tr>
-                        <td>Find drug runs</td>
-                        <td>
-                            <input type="checkbox" checked={account.enableDrugRunFinding || false} onChange={() => onPropToggle("enableDrugRunFinding")} />
-                        </td>
-                    </tr>
-
                     <tr>
                         <td>Buy personal bullet factory</td>
                         <td>
