@@ -1,15 +1,23 @@
 import React from "react";
 import Play from "./icons/play.svg";
 import Pause from "./icons/pause.svg";
+
 import Buy from "./icons/buy.svg"
-import Factory from "./icons/factory-pollution.svg"
-import Handcuffs from "./icons/handcuffs.svg"
-import Marijuana from "./icons/marijuana.svg"
-import Search from "./icons/search-line.svg"
-import SedanCar from "./icons/sedan-car.svg"
-import Sold from "./icons/sold.svg"
-import Thief from "./icons/thief.svg"
-import Plane from "./icons/plane.svg"
+// import Factory from "./icons/factory-pollution.svg"
+// import Handcuffs from "./icons/handcuffs.svg"
+// import Marijuana from "./icons/marijuana.svg"
+// import Search from "./icons/search-line.svg"
+// import SedanCar from "./icons/sedan-car.svg"
+ import Sold from "./icons/sold.svg"
+// import Thief from "./icons/thief.svg"
+// import Plane from "./icons/plane.svg"
+import SmallCrime from "./icons/smallcrime.svg";
+import GTA from "./icons/gta.svg";
+import JailBusting from "./icons/jailbusting.svg";
+import Drugrun from "./icons/drugrun.svg";
+import LeadMining from "./icons/leadmining.svg";
+import BulletFactory from "./icons/bulletfactory.svg";
+
 import BanLine from "./icons/ban-line.svg"
 import Ascending from "./icons/ascending.svg"
 import Descending from "./icons/descending.svg"
@@ -18,20 +26,15 @@ import DefaultSort from "./icons/sort-result.svg"
 import { sortAccounts } from "./sorting";
 import TypeChooser from "./TypeChooser";
 
-const jailBustingIcon = <img title="Jail busting" className="icon" src={Handcuffs} />;
-const smallCrimeIcon = <img title="Small crimes" className="icon" src={Thief} />;
-const gtaIcon = <img title="GTA" className="icon" src={SedanCar} />;
+const jailBustingIcon = <img title="Jail busting" className="icon" src={JailBusting} />;
+const smallCrimeIcon = <img title="Small crimes" className="icon" src={SmallCrime} />;
+const gtaIcon = <img title="GTA" className="icon" src={GTA} />;
 const carSellingIcon = <img title="Car seller" className="icon" src={Sold} />;
 const buyItemsIcon = <img title="Item buyer" className="icon" src={Buy} />;
 
 const Name = ({ account }) => {
     if (account.invalidPassword) {
         return <span style={{ color: "red" }}>Incorrect password!</span>
-    } else if (account.dead) {
-        return <>
-            {account.name}
-            <span style={{ color: "red" }}>(DEAD)</span>
-        </>
     } else if (!account.name) {
         return <>Loading...</>
     }
@@ -130,8 +133,8 @@ const AccountTable = (props) => {
                 <th><SortButton prop="enableGta">{gtaIcon}</SortButton></th>
                 <th><SortButton prop="enableCarSelling">{carSellingIcon}</SortButton></th>
                 <th><SortButton prop="enableItemBuying">{buyItemsIcon}</SortButton></th>
-                <th><SortButton prop="enableDrugRunning"><img title="Drug dealing" className="icon" src={Marijuana} /></SortButton></th>
-                <th><SortButton prop="enableBuyingPbf"><img title="Buy personal bullet factory" className="icon" src={Factory} /></SortButton></th>
+                <th><SortButton prop="enableDrugRunning"><img title="Drug dealing" className="icon" src={Drugrun} /></SortButton></th>
+                <th><SortButton prop="enableBuyingPbf"><img title="Buy personal bullet factory" className="icon" src={BulletFactory} /></SortButton></th>
                 <th><SortButton prop="email">Email</SortButton></th>
                 <th><SortButton prop="name">Name</SortButton></th>
                 <th><SortButton prop="rank">Rank</SortButton></th>
@@ -182,13 +185,13 @@ const AccountTable = (props) => {
                         {!account.active && "Paused"}
                     </td>
                     <td className="composite-icon">
-                        <ConfigIcon title="Jail busting" svg={Handcuffs} propName="enableJailbusting" email={email} account={account} />
+                        <ConfigIcon title="Jail busting" svg={JailBusting} propName="enableJailbusting" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
-                        <ConfigIcon title="Small crimes" svg={Thief} propName="enableSmallCrime" email={email} account={account} />
+                        <ConfigIcon title="Small crimes" svg={SmallCrime} propName="enableSmallCrime" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
-                        <ConfigIcon title="GTA" svg={SedanCar} propName="enableGta" email={email} account={account} />
+                        <ConfigIcon title="GTA" svg={GTA} propName="enableGta" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
                         <ConfigIcon title="Sell cars" svg={Sold} propName="enableCarSelling" email={email} account={account} />
@@ -197,14 +200,17 @@ const AccountTable = (props) => {
                         <ConfigIcon title="Buy items" svg={Buy} propName="enableItemBuying" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
-                        <ConfigIcon title="Sell drugs" svg={Marijuana} propName="enableDrugRunning" email={email} account={account} />
+                        <ConfigIcon title="Sell drugs" svg={Drugrun} propName="enableDrugRunning" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
-                        <ConfigIcon title="Personal bullet factory" svg={Factory} propName="enableBuyingPbf" email={email} account={account} />
+                        <ConfigIcon title="Personal bullet factory" svg={BulletFactory} propName="enableBuyingPbf" email={email} account={account} />
                     </td>
                     <td>{email}</td>
                     <td><Name account={account} /></td>
-                    <td>{account.rank}</td>
+                    <td>
+                        {!account.dead && account.rank}
+                        {account.dead && <span style={{ color: "red"}}>DEAD</span>}
+                    </td>
                     <td>€ {account.cash && account.cash.toLocaleString()}</td>
                     <td>{account.bullets}</td>
                     <td>{account.country}</td>

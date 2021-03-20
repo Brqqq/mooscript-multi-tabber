@@ -360,7 +360,7 @@ const start = async () => {
                         }
                         window.currentCookie = auth;
 
-                        await performAction(savePlayerInfo, 0, 0);
+                        await performAction(savePlayerInfo, account, 0, 0);
                         attempt = maxAttempts;
 
                     } catch (e) {

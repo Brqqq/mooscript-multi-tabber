@@ -22,7 +22,7 @@ const sortNumbers = (accountList, propToCompare, isAsc) => {
 }
 
 
-const ranks = ["bacteria", "low life", "young woman", "apprentice", "adult lady", "hitman", "hitwoman", "assassin", "local boss", "local bossin", "boss", "bossin", "godfather", "godmother"];
+const ranks = [undefined, "dead", "bacteria", "low life", "young woman", "apprentice", "adult lady", "hitman", "hitwoman", "assassin", "local boss", "local bossin", "boss", "bossin", "godfather", "godmother"];
 const compareRanks = (rankA, rankB) => {
     const aIndex = ranks.indexOf(rankA?.toLowerCase());
     const bIndex = ranks.indexOf(rankB?.toLowerCase());
@@ -34,7 +34,12 @@ const compareRanks = (rankA, rankB) => {
 
 const rankSort = (accountList, propToCompare, isAsc) => {
     const sorted = accountList
-        .sort((a, b) => compareRanks(a[propToCompare], b[propToCompare]));
+        .sort((a, b) => {
+            const aRank = (a.dead && "dead") || a[propToCompare];
+            const bRank = (b.dead && "dead") || b[propToCompare];
+
+            return compareRanks(aRank, bRank)
+        });
     
     return isAsc ? sorted : sorted.reverse();
 }
