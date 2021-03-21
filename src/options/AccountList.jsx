@@ -60,14 +60,18 @@ const AccountList = (props) => {
 
         const loginResult = await chrome.extension.getBackgroundPage().login(email);
 
-        if(!loginResult) {
+        if (!loginResult) {
             alert("There was an error with logging in your account. Maybe the password is incorrect or mobstar doesn't work?");
         }
 
     }
 
     const hasDrugRun = drugs?.run1 != null && drugs?.run2 != null;
-    const accountKeys = Object.keys(accounts);
+
+    const filteredAccounts = filterAccounts(accounts, filter);
+
+    const accountKeys = Object.keys(filteredAccounts);
+
     const totalCash = accountKeys.reduce((acc, curr) => {
         if (Number.isInteger(accounts[curr].cash)) {
             return acc + accounts[curr].cash;
@@ -76,28 +80,40 @@ const AccountList = (props) => {
         return acc;
     }, 0);
 
-    const filteredAccounts = filterAccounts(accounts, filter);
+    const onStartAll = () => {
+        chrome.extension
+            .getBackgroundPage()
+            .updateAccounts(Object.keys(filteredAccounts), { active: true });
+    }
+
+    const onStopAll = () => {
+        chrome.extension
+            .getBackgroundPage()
+            .updateAccounts(Object.keys(filteredAccounts), { active: false });
+    }
 
     return <>
         <Options accounts={accounts} drugs={drugs} />
         {hasDrugRun && <h2>DR: {drugs.run1.country || "<unknown>"} -> {drugs.run2.country || "<unknown>"}</h2>}
         <h2>Total cash: € {totalCash.toLocaleString()}</h2>
-        
-        {accountKeys.length === 0 && <div>You have no accounts on script.</div>}
-        {accountKeys.length > 0 && <>
-            <AccountFilter
-                filter={filter}
-                onFilterChange={setFilter}
-                onConfigureClick={() => setShowAccountConfig(true)}
-            />
+
+        <AccountFilter
+            filter={filter}
+            onFilterChange={setFilter}
+            onConfigureClick={() => setShowAccountConfig(true)}
+            startAll={onStartAll}
+            stopAll={onStopAll}
+        />
+
+        {accountKeys.length === 0 && <div>There are no accounts.</div>}
+        {accountKeys.length > 0 &&
             <AccountTable
                 onAddToAccountUpdateList={onAddToAccountUpdateList}
                 onRemove={onRemove}
                 accounts={filteredAccounts}
                 onScriptActiveChange={setActive}
                 onLogin={onLogin}
-            />
-        </>}
+            />}
 
         {/* We dont use the `visibility` prop because we want an unmountOnExit behavior that doesn't exist */}
         {showAccountConfig && <Rodal

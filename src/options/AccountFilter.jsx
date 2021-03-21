@@ -59,10 +59,13 @@ const AccountFilter = (props) => {
                 </td>
             </tr>
             <tr>
-                <td>
+                <td colSpan={2}>
                     <button onClick={props.onConfigureClick}>Configure accounts</button>
-                </td>
-                <td>
+                    &nbsp;
+                    <button onClick={props.startAll} title="Starts scripting on all the filtered accounts in the list below">Start scripting</button>
+                    &nbsp;
+                    <button onClick={props.stopAll} title="Stop scripting on all the filtered accounts in the list below">Stop scripting</button>
+                    &nbsp;
                     <button onClick={onReset}>Reset filter</button>
                 </td>
             </tr>
