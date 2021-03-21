@@ -20,11 +20,30 @@ chrome.browserAction.onClicked.addListener(() => {
 });
 
 let mobAuths = {};
+let tabSessions = {};
 
 window.currentCookie = "";
 
 
 let manualLoginRequestId = "";
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+    if (tabSessions[tabId]) {
+        delete tabSessions[tabId];
+    }
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (tabSessions[tabId] != null && changeInfo.status === 'complete') {
+        const accounts = getAccounts();
+        const account = accounts[tabSessions[tabId]];
+        if (account != null) {
+            chrome.tabs.executeScript(tabId, {
+                code: `document.title = "${account.name}";`
+            });
+        }
+    }
+});
 
 // All of this header magic is to distinguish extension HTTP requests vs non-extension HTTP requests
 // Otherwise this script would constantly interfere with the user playing the game
@@ -34,6 +53,18 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
         if (details.url.includes("mooscript=true")) {
             manualLoginRequestId = details.requestId;
+        }
+
+        if (tabSessions[details.tabId] != null) {
+            for (var i = 0; i < details.requestHeaders.length; i++) {
+                if (details.requestHeaders[i].name === "Cookie") {
+                    const email = tabSessions[details.tabId];
+                    const cookie = mobAuths[email];
+                    details.requestHeaders[i].value = cookie;
+                    break;
+                }
+            }
+            return { requestHeaders: details.requestHeaders };
         }
 
         // This means the the request came from somewhere other than our script
@@ -56,6 +87,18 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
 
 chrome.webRequest.onHeadersReceived.addListener((details) => {
+    if (tabSessions[details.tabId] != null && details.url.includes("https://www.mobstar.cc/main/message.php?msgid=1")) {
+        const email = tabSessions[details.tabId];
+        const account = getAccounts()[email];
+
+        if (account) {
+            tryLogin(email, account, mobAuths)
+                .catch(e => console.error);
+        }
+
+        return { responseHeaders: details.responseHeaders };
+    }
+
     if (details.url.includes("mooscript=true") || details.initiator == null || !details.initiator.includes("chrome-extension://")) {
         return { responseHeaders: details.responseHeaders };
     }
@@ -112,7 +155,7 @@ const useAuthToken = (email) => {
                 name: "MOBSTAR_AUTH",
                 value: token.split("=")[1]
             }, (cookie) => {
-                resolve();
+                resolve(cookie);
             });
         } catch (e) {
             reject(e);
@@ -136,6 +179,33 @@ window.setInStorage = setInStorage;
 window.resetDrugRun = resetDrugRun;
 
 window.addAccountsToUpdateList = addAccountsToUpdateList;
+
+window.login = async (email) => {
+    const account = getAccounts()[email];
+
+    let authToken = mobAuths[email];
+
+    try {
+        if (authToken == null) {
+            authToken = await tryLogin(email, account, mobAuths);
+        }
+
+        if (!authToken) {
+            return false;
+        }
+    } catch (e) {
+        console.log("ERROR WITH LOGIN", e);
+        return false;
+    }
+    chrome.tabs.create({
+        url: "https://www.mobstar.cc"
+    }, (tab) => {
+        tab.title = account.name;
+        tabSessions[tab.id] = email;
+    });
+
+    return true;
+}
 
 const gameLoop = async (action, ticksInSeconds) => {
     let lastLoopTime = new Date();
