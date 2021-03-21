@@ -56,23 +56,14 @@ const AccountList = (props) => {
     }
 
     const onLogin = async (e, email) => {
-        //if (accounts[email].active) {
-            e.preventDefault();
-            // let cookie;
-            // try {
-            //     cookie = await chrome.extension.getBackgroundPage().useAuthToken(email);
-            // } catch (e) {
-            //     alert("Please wait a moment and try again in a second. The script has to log you in first.")
-            //     return;
-            // }
+        e.preventDefault();
 
-            //window.open("https://www.mobstar.cc", "mobstar");
-            const loginResult = chrome.extension.getBackgroundPage().login(email);
+        const loginResult = await chrome.extension.getBackgroundPage().login(email);
 
-            if(!loginResult) {
-                alert("There was an error with logging in your account. Maybe the password is incorrect or mobstar doesn't work?");
-            }
-        //}
+        if(!loginResult) {
+            alert("There was an error with logging in your account. Maybe the password is incorrect or mobstar doesn't work?");
+        }
+
     }
 
     const hasDrugRun = drugs?.run1 != null && drugs?.run2 != null;

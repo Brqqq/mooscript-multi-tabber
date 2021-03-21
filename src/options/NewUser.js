@@ -6,9 +6,9 @@ const NewUser = ({ onSubmit }) => {
     const [rememberPassword, setRememberPassword] = React.useState(false);
     const emailRef = React.useRef();
 
-    const onKeyPressed = (e) => {
+    const onKeyDown = (e) => {
         if (e.keyCode === 13) {
-            onAddAccount();
+            onAddAccount(e);
         }
     }
 
@@ -23,8 +23,8 @@ const NewUser = ({ onSubmit }) => {
     }
     return <>
         <h3>Add new account</h3>
-        <input onKeyPress={onKeyPressed} ref={emailRef} type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
-        <input onKeyPress={onKeyPressed} style={{ marginLeft: 6 }} type="text" placeholder="Password" value={password} onChange={e => setPassword(e.currentTarget.value)} />
+        <input onKeyDown={onKeyDown} ref={emailRef} type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
+        <input onKeyDown={onKeyDown} style={{ marginLeft: 6 }} type="text" placeholder="Password" value={password} onChange={e => setPassword(e.currentTarget.value)} />
         <input id="rememberpassword" type="checkbox" onChange={e => setRememberPassword(e.currentTarget.checked)} />
         <label htmlFor="rememberpassword">Remember password</label>
 
