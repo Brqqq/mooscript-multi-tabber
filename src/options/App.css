@@ -10,6 +10,15 @@ img.icon {
   height: 2em;
 }
 
+img.icon-small {
+  width: 1em;
+  height: 1em;
+}
+
+.highlight {
+  background-color: #d7d9d7;
+}
+
 .small-icon {
   width: 1.1em;
   height: 1.1em;

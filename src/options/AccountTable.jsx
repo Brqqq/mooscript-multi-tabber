@@ -2,15 +2,8 @@ import React from "react";
 import Play from "./icons/play.svg";
 import Pause from "./icons/pause.svg";
 
-import Buy from "./icons/buy.svg"
-// import Factory from "./icons/factory-pollution.svg"
-// import Handcuffs from "./icons/handcuffs.svg"
-// import Marijuana from "./icons/marijuana.svg"
-// import Search from "./icons/search-line.svg"
-// import SedanCar from "./icons/sedan-car.svg"
- import Sold from "./icons/sold.svg"
-// import Thief from "./icons/thief.svg"
-// import Plane from "./icons/plane.svg"
+import Buy from "./icons/buy.svg";
+import Sold from "./icons/sold.svg";
 import SmallCrime from "./icons/smallcrime.svg";
 import GTA from "./icons/gta.svg";
 import JailBusting from "./icons/jailbusting.svg";
@@ -18,10 +11,10 @@ import Drugrun from "./icons/drugrun.svg";
 import LeadMining from "./icons/leadmining.svg";
 import BulletFactory from "./icons/bulletfactory.svg";
 
-import BanLine from "./icons/ban-line.svg"
-import Ascending from "./icons/ascending.svg"
-import Descending from "./icons/descending.svg"
-import DefaultSort from "./icons/sort-result.svg"
+import BanLine from "./icons/ban-line.svg";
+import Ascending from "./icons/ascending.svg";
+import Descending from "./icons/descending.svg";
+import DefaultSort from "./icons/sort-result.svg";
 
 import { sortAccounts } from "./sorting";
 import TypeChooser from "./TypeChooser";
@@ -31,6 +24,8 @@ const smallCrimeIcon = <img title="Small crimes" className="icon" src={SmallCrim
 const gtaIcon = <img title="GTA" className="icon" src={GTA} />;
 const carSellingIcon = <img title="Car seller" className="icon" src={Sold} />;
 const buyItemsIcon = <img title="Item buyer" className="icon" src={Buy} />;
+const drugDealingIcon = <img title="Drug dealing" className="icon" src={Drugrun} />;
+const pbfIcon = <img title="Buy personal bullet factory" className="icon" src={BulletFactory} />;
 
 const Name = ({ account }) => {
     if (account.invalidPassword) {
@@ -64,12 +59,17 @@ const ConfigIcon = ({ email, title, account, svg, propName }) => {
 const AccountTable = (props) => {
     const [sortProp, setSortProp] = React.useState("email");
     const [isAsc, setIsAsc] = React.useState(true);
+    const [lastLoggedIn, setLastLoggedIn] = React.useState(undefined);
     const {
         onRemove,
         accounts,
         onScriptActiveChange,
-        onLogin
     } = props;
+
+    const onLogin = (e, email) => {
+        setLastLoggedIn(email);
+        props.onLogin(e, email);
+    }
 
     let accountList = Object.keys(accounts).map(email => ({
         ...accounts[email],
@@ -132,8 +132,8 @@ const AccountTable = (props) => {
                 <th><SortButton prop="enableGta">{gtaIcon}</SortButton></th>
                 <th><SortButton prop="enableCarSelling">{carSellingIcon}</SortButton></th>
                 <th><SortButton prop="enableItemBuying">{buyItemsIcon}</SortButton></th>
-                <th><SortButton prop="enableDrugRunning"><img title="Drug dealing" className="icon" src={Drugrun} /></SortButton></th>
-                <th><SortButton prop="enableBuyingPbf"><img title="Buy personal bullet factory" className="icon" src={BulletFactory} /></SortButton></th>
+                <th><SortButton prop="enableDrugRunning">{drugDealingIcon}</SortButton></th>
+                <th><SortButton prop="enableBuyingPbf">{pbfIcon}</SortButton></th>
                 <th><SortButton prop="email">Email</SortButton></th>
                 <th><SortButton prop="name">Name</SortButton></th>
                 <th><SortButton prop="rank">Rank</SortButton></th>
@@ -151,7 +151,7 @@ const AccountTable = (props) => {
         <tbody>
             {sortedAccounts.map((account, idx) => {
                 const { email } = account;
-                return <tr key={email}>
+                return <tr key={email} className={lastLoggedIn === email ? "highlight" : undefined}>
                     <td>
                         {idx + 1}
                     </td>
@@ -176,8 +176,8 @@ const AccountTable = (props) => {
                         </form>
                     </td>
                     <td>
-                        {account.active && <button className="link-button" onClick={() => onScriptActiveChange(email, false)}><img src={Pause} /></button>}
-                        {!account.active && <button className="link-button" onClick={() => onScriptActiveChange(email, true)}><img src={Play} /></button>}
+                        {account.active && <button className="link-button" onClick={() => onScriptActiveChange(email, false)}><img className="icon-small" src={Pause} /></button>}
+                        {!account.active && <button className="link-button" onClick={() => onScriptActiveChange(email, true)}><img className="icon-small" src={Play} /></button>}
                     </td>
                     <td>
                         {account.active && "Running..."}
@@ -208,7 +208,7 @@ const AccountTable = (props) => {
                     <td><Name account={account} /></td>
                     <td>
                         {!account.dead && account.rank}
-                        {account.dead && <span style={{ color: "red"}}>DEAD</span>}
+                        {account.dead && <span style={{ color: "red" }}>DEAD</span>}
                     </td>
                     <td>€ {account.cash && account.cash.toLocaleString()}</td>
                     <td>{account.bullets}</td>
