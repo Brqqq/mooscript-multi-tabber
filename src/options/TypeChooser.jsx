@@ -1,20 +1,12 @@
 import React from "react";
-const options = [
-    "⭕",
-    "🟠",
-    "🟣",
-    "⚫",
-    "🔵",
-    "🟡",
-    "⚪"
-]
+import { typeOptions } from "./constants";
 
 const TypeChooser = ({ value, onChange }) => {
     return <select
         onChange={e => onChange(e.target.value)}
         id="type-select"
         value={value || "⭕"}>
-        {options.map(type => <option key={type}>
+        {typeOptions.map(type => <option key={type}>
             {type}
         </option>)}
 

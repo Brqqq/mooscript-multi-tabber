@@ -6,8 +6,8 @@
 }
 
 img.icon {
-  width: 1.8em;
-  height: 1.8em;
+  width: 2em;
+  height: 2em;
 }
 
 .small-icon {
@@ -20,7 +20,7 @@ img.icon {
   height: 1.9em;
   position: absolute;
   top: 3px;
-  left: 7px;
+  left: 10px;
 }
 
 body {

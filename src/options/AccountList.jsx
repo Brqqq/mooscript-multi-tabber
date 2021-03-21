@@ -4,11 +4,18 @@ import ConfigModal from "./ConfigModal";
 import Rodal from 'rodal';
 import Options from "./Options";
 import AccountTable from "./AccountTable";
+import AccountFilter from "./AccountFilter";
+import { filterAccounts } from "./filterAccounts";
 
 const AccountList = (props) => {
     const [accounts, setAccounts] = React.useState({});
     const [drugs, setDrugs] = React.useState({});
-    const [configuringAccount, setConfiguringAccount] = React.useState(undefined);
+    const [showAccountConfig, setShowAccountConfig] = React.useState(false);
+    const [filter, setFilter] = React.useState({
+        name: "",
+        crewName: "",
+        value: ""
+    });
 
     const onStorageChanges = (changes) => {
         if (changes.accounts != null) {
@@ -58,7 +65,7 @@ const AccountList = (props) => {
                 return;
             }
 
-            window.open("https://www.mobstar.cc");
+            window.open("https://www.mobstar.cc", "mobstar");
         }
     }
 
@@ -72,30 +79,38 @@ const AccountList = (props) => {
         return acc;
     }, 0);
 
+    const filteredAccounts = filterAccounts(accounts, filter);
+
     return <>
         <Options accounts={accounts} drugs={drugs} />
         {hasDrugRun && <h2>DR: {drugs.run1.country || "<unknown>"} -> {drugs.run2.country || "<unknown>"}</h2>}
         <h2>Total cash: € {totalCash.toLocaleString()}</h2>
-        <h3>All accounts</h3>
+        
         {accountKeys.length === 0 && <div>You have no accounts on script.</div>}
-        {accountKeys.length > 0 && <AccountTable
-            onAddToAccountUpdateList={onAddToAccountUpdateList}
-            onRemove={onRemove}
-            accounts={accounts}
-            onScriptActiveChange={setActive}
-            setConfiguringAccount={setConfiguringAccount}
-            onLogin={onLogin}
-        />}
+        {accountKeys.length > 0 && <>
+            <AccountFilter
+                filter={filter}
+                onFilterChange={setFilter}
+                onConfigureClick={() => setShowAccountConfig(true)}
+            />
+            <AccountTable
+                onAddToAccountUpdateList={onAddToAccountUpdateList}
+                onRemove={onRemove}
+                accounts={filteredAccounts}
+                onScriptActiveChange={setActive}
+                onLogin={onLogin}
+            />
+        </>}
 
         {/* We dont use the `visibility` prop because we want an unmountOnExit behavior that doesn't exist */}
-        {configuringAccount != null && <Rodal
+        {showAccountConfig && <Rodal
             visible
-            onClose={() => setConfiguringAccount(undefined)}
-            height={350}
+            onClose={() => setShowAccountConfig(false)}
+            height={390}
         >
             <ConfigModal
-                account={configuringAccount}
-                onClose={() => setConfiguringAccount(undefined)}
+                accounts={filteredAccounts}
+                onClose={() => setShowAccountConfig(false)}
             />
         </Rodal>}
     </>;

@@ -89,6 +89,19 @@ export const updateAccount = async (email, updatedValues) => {
     return setInStorage({ accounts: newAccounts });
 }
 
+export const updateAccounts = async (emails, updatedValues) => {
+    const { accounts } = await getFromStorage("accounts");
+
+    for(const email of emails) {
+        accounts[email] = {
+            ...accounts[email],
+            ...updatedValues
+        }
+    }
+
+    return setInStorage({ accounts });
+}
+
 export const updateConfig = async (props) => {
     const { config } = await getFromStorage("config");
 

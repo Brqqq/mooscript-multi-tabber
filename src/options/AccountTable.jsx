@@ -68,7 +68,6 @@ const AccountTable = (props) => {
         onRemove,
         accounts,
         onScriptActiveChange,
-        setConfiguringAccount,
         onLogin
     } = props;
 
@@ -203,7 +202,7 @@ const AccountTable = (props) => {
                         <ConfigIcon title="Sell drugs" svg={Drugrun} propName="enableDrugRunning" email={email} account={account} />
                     </td>
                     <td className="composite-icon">
-                        <ConfigIcon title="Personal bullet factory" svg={BulletFactory} propName="enableBuyingPbf" email={email} account={account} />
+                        <ConfigIcon title="Buy personal bullet factory" svg={BulletFactory} propName="enableBuyingPbf" email={email} account={account} />
                     </td>
                     <td>{email}</td>
                     <td><Name account={account} /></td>
