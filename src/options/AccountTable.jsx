@@ -1,3 +1,4 @@
+/*global chrome*/
 import React from "react";
 import Play from "./icons/play.svg";
 import Pause from "./icons/pause.svg";
