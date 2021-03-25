@@ -33,6 +33,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
     }
 });
 
+// When a new popup is created
 chrome.webNavigation.onCreatedNavigationTarget.addListener(details => {
     if(details.sourceTabId && tabSessions[details.sourceTabId] != null) {
         tabSessions[details.tabId] = tabSessions[details.sourceTabId];

@@ -17,6 +17,11 @@ const multipleEntry = require('react-app-rewire-multiple-entry')([
         entry: 'src/options/index.js',
         template: 'public/index.html',
         outPath: '/index.html'
+    },
+    {
+        entry: 'src/messages/index.js',
+        template: 'public/messages.html',
+        outPath: '/messages.html'
     }
 ]);
 

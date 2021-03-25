@@ -101,5 +101,13 @@ export const doDrugDeal = async () => {
     const { document: newDrugPage } = await postForm(Routes.Drugs, sellBestDrugBody);
 
     await updateDrugRunPrices(currentCountry, buildDrugPriceMap(drugsPage), nextRun.country, buildDrugPriceMap(newDrugPage));
+
+    const airportCooldownLine = flightsPage.documentElement.innerHTML.match(/id: 'airport'.*/);
+    if(airportCooldownLine) {
+        const cooldown = airportCooldownLine[0].match(/(\d+)(?!.*\d)/); // Get last number in the line
+        if(cooldown) {
+            return (1000 * +cooldown[0]) + 5000
+        }
+    }
     return successfulCooldown;
 }

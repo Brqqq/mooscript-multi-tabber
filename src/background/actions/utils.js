@@ -201,6 +201,7 @@ export const getPlayerInfo = async () => {
     const { document: pointShopDoc } = await getDoc(Routes.PointsShop);
     const { document: accountsDoc } = await postForm(Routes.PersonalAjax, "page=1&_");
     const { document: leadDoc } = await getDoc(Routes.LeadFactory);
+    const { document: inboxDoc } = await getDoc(Routes.Inbox);
 
     // You might think: why don't you get the cash/rank/bullets/etc from that table on the top of most pages? Or just eval the JS that contains the data? Instead of the convoluted BS
     // Well, my dear imaginary asker, that table gets added dynamically with JS. We don't render the page, only get the raw HTML. So that table will be empty.
@@ -212,6 +213,7 @@ export const getPlayerInfo = async () => {
     // When there is a crew, it's wrapped inside anchor tags. And yes I use regex to extract the name. Deal with it.
     const crewName = crew === "None" ? crew : crew.match(/>(.*?)</)[1];
     const isPaying = accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[8].innerText.trim() === "Yes";
+    const messageTables = Array.from(inboxDoc.querySelectorAll(".message"));
 
     return {
         cash: getCash(pointShopDoc),
@@ -225,7 +227,15 @@ export const getPlayerInfo = async () => {
         country: getCurrentCountry(pointShopDoc),
         email: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[2].innerText,
         name: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[4].innerText,
-        lead: lead ? +lead.innerText : "No lead factory"
+        lead: lead ? +lead.innerText : "No lead factory",
+        messages: messageTables.map(el => {
+            const tdEls = el.querySelectorAll("td");
+
+            return {
+                from: tdEls[0].innerText,
+                message: tdEls[1].innerHTML
+            };
+        })
     }
 }
 

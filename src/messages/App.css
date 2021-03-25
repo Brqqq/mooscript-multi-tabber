@@ -1,0 +1,160 @@
+.App {
+  text-align: center;
+}
+.composite-icon {
+  position: relative;
+}
+
+img.icon {
+  width: 1.7em;
+  height: 1.7em;
+}
+
+img.icon-small {
+  width: 1em;
+  height: 1em;
+}
+
+.highlight {
+  background-color: #d7d9d7;
+}
+
+.small-icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.composite-icon img.icon.layered {
+  width: 1.9em;
+  height: 1.9em;
+  position: absolute;
+  top: 3px;
+  left: 10px;
+}
+
+body {
+  background-color: #F4F7F5;
+}
+
+table {
+  margin-left: auto;
+  margin-right: auto;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+td {
+  padding: 4px 8px 4px 8px;
+  border: 1px solid #ded5c3;
+}
+
+th {
+  padding: 4px 8px 4px 8px;
+  border: 1px solid #ded5c3;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+
+/* -- title -- */
+.header {
+  font-size: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9e9e9;
+}
+
+/* -- body -- */
+.body {
+  padding-top: 15px;
+}
+
+/* -- button -- */
+.rodal-cancel-btn,
+.rodal-confirm-btn {
+  position: absolute;
+  font: inherit;
+  bottom: 16px;
+  width: 70px;
+  padding: 4px 15px;
+  border-radius: 3px;
+  transition: background 0.2s;
+  border: 1px solid #03a9f4;
+}
+.rodal-confirm-btn {
+  color: #fff;
+  right: 102px;
+  background: #03a9f4;
+}
+.rodal-confirm-btn:hover {
+  background: #0098e3;
+}
+.rodal-cancel-btn {
+  color: #03a9f4;
+  right: 16px;
+  background: #fff;
+}
+.rodal-cancel-btn:hover {
+  background: #fafafa;
+}
+.rodal-cancel-btn:focus,
+.rodal-confirm-btn:focus {
+  outline: none;
+}
+.rodal-confirm-btn:active {
+  background: #0087d2;
+}
+.rodal-cancel-btn:active {
+  background: #fafafa;
+  box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.2), 0 0 1px transparent;
+}
+
+.link-button {
+  background: none!important;
+  border: none;
+  padding: 0!important;
+  /*optional*/
+  font-family: arial, sans-serif;
+  /*input has OS specific font-family*/
+  color: #069;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#type-select {
+  background: inherit;
+  color: gray;
+  padding-left: 5px;
+  font-size: 14px;
+  border: none;
+}
+
+#type-select option {
+  display: flex;
+  white-space: pre;
+  min-height: 20px;
+  padding: 0px 2px 1px;
+}

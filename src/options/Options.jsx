@@ -108,6 +108,8 @@ const Options = props => {
         <button onClick={() => setShowImportModal(true)}>Import</button>
         &nbsp;
         <button onClick={resetDrugRun}>Reset drug run</button>
+        &nbsp;
+        <button onClick={() => window.location = "/messages.html"}>Witness list</button>
 
         {showExportModal && <ExportModal accounts={props.accounts} onClose={() => setShowExportModal(false)} />}
         {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} />}
