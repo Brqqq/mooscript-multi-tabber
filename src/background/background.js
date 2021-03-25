@@ -33,6 +33,12 @@ chrome.tabs.onRemoved.addListener((tabId) => {
     }
 });
 
+chrome.webNavigation.onCreatedNavigationTarget.addListener(details => {
+    if(details.sourceTabId && tabSessions[details.sourceTabId] != null) {
+        tabSessions[details.tabId] = tabSessions[details.sourceTabId];
+    }
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (tabSessions[tabId] != null && changeInfo.status === 'complete') {
         const accounts = getAccounts();

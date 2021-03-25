@@ -22,6 +22,7 @@
     "cookies",
     "webRequest",
     "webRequestBlocking",
+    "webNavigation",
     "https://www.mobstar.cc/*"
   ]
 }
