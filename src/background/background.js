@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList } from "./storage.js";
+import { addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -14,6 +14,9 @@ import { Routes } from "./actions/routes.js";
 import { savePlayerInfo } from "./actions/saveplayerinfo.js";
 import { buyItems } from "./actions/buyitems.js";
 import { doJailbust } from "./actions/jailbuster.js";
+
+import { searchAccount } from "./detective/search.js";
+import { findResult } from "./detective/findresult.js";
 
 chrome.browserAction.onClicked.addListener(() => {
     chrome.tabs.create({ url: "index.html" });
@@ -186,6 +189,73 @@ window.setInStorage = setInStorage;
 window.resetDrugRun = resetDrugRun;
 
 window.addAccountsToUpdateList = addAccountsToUpdateList;
+
+window.startDetectiveSearch = async (searcher, target, countries, clearPastSearches) => {
+    let attempts = 0;
+    const maxAttempts = 3;
+    const account = getAccounts()[searcher];
+    if (!account) {
+        return "The account you selected isn't in MooScript anymore...";
+    }
+
+    do {
+        attempts++;
+        try {
+            let auth = mobAuths[searcher];
+
+            if (auth == null) {
+                auth = await tryLogin(searcher, account, mobAuths);
+                if (!auth) return "Error with logging in your account. Incorrect password?";
+            }
+            window.currentCookie = auth;
+
+            await searchAccount(target, countries, clearPastSearches);
+
+            await addNewDetectiveSearch(searcher, target, countries)
+
+            return true;
+
+        } catch (e) {
+            let fetchRes;
+            try {
+                fetchRes = await getDoc(Routes.TestPage);
+            } catch (innerEx) {
+                console.log("Error with connecting to mobstar");
+                console.log("Initial error")
+                console.error(e);
+                console.log("Mobstar connection exception")
+                console.error(innerEx);
+                await sleep(2000);
+            }
+
+            try {
+                if (isDead(fetchRes.document)) {
+                    return "Your account is dead!";
+                }
+                else if (isLoggedOut(fetchRes.result)) {
+                    await tryLogin(searcher, account, mobAuths);
+                } else if (isInJail(fetchRes.result)) {
+                    return "Your account is in jail. Try again in a bit.";
+                }
+                else {
+                    console.error("Unknown error with user: " + searcher);
+                    console.error(e);
+                    console.error(fetchRes);
+                    await sleep(2000);
+                }
+            } catch (innerEx) {
+                console.error("Error while handling error with user: " + searcher);
+                console.error(innerEx);
+                console.error(fetchRes);
+                await sleep(2000);
+            }
+        }
+
+
+    } while (attempts < maxAttempts);
+
+    return "Something went wrong with logging in your account... try again?";
+}
 
 window.login = async (email) => {
     const account = getAccounts()[email];
@@ -491,6 +561,84 @@ const start = async () => {
             }
 
             updateConfig({ updateAccounts: [] });
+        }
+
+        const detective = getDetective();
+        const searching = Object.keys(detective.searching);
+        if (searching.length > 0) {
+            const foundResults = [];
+            for (const searchKey of searching) {
+                const search = detective.searching[searchKey];
+
+                const account = accounts[search.searcher];
+                if (!account) {
+                    await removeDetectiveSearch(searchKey);
+                    continue;
+                }
+
+                let attempt = 0;
+                const maxAttempts = 3;
+
+                do {
+                    attempt++;
+                    let auth = mobAuths[search.searcher];
+
+                    try {
+                        if (auth == null) {
+                            auth = await tryLogin(search.searcher, account, mobAuths);
+                            if (!auth) continue;
+                        }
+                        window.currentCookie = auth;
+
+                        //await performAction(savePlayerInfo, account, 0, 0);
+                        const result = await findResult(search.target);
+                        if(result) {
+                            foundResults.push({ id: searchKey, foundInCountry: result });
+                        }
+                        attempt = maxAttempts;
+
+                    } catch (e) {
+                        let fetchRes;
+                        try {
+                            fetchRes = await getDoc(Routes.TestPage);
+                        } catch (innerEx) {
+                            console.log("Error with connecting to mobstar");
+                            console.log("Initial error")
+                            console.error(e);
+                            console.log("Mobstar connection exception")
+                            console.error(innerEx);
+                            await sleep(5000);
+                            continue;
+                        }
+
+                        try {
+
+                            if (isDead(fetchRes.document)) {
+                                await removeDetectiveSearch(searchKey);
+                                attempt = maxAttempts;
+                            }
+                            else if (isLoggedOut(fetchRes.result)) {
+                                await tryLogin(search.searcher, account, mobAuths);
+                            } else if (isInJail(fetchRes.result)) {
+                                continue;
+                            }
+                            else {
+                                console.error("Unknown error with user: " + search.searcher);
+                                console.error(e);
+                                console.error(fetchRes);
+                            }
+                        } catch (innerEx) {
+                            console.error("Error while handling error with user: " + search.searcher);
+                            console.error(innerEx);
+                            console.error(fetchRes);
+                        }
+                    }
+                } while (attempt < maxAttempts)
+            }
+
+            if(foundResults.length > 0) {
+                await addNewDetectiveFind(foundResults);
+            }
         }
     };
 

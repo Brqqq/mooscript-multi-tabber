@@ -21,6 +21,9 @@ export const Routes = {
     Inventory: base + "/mobstar/inventory/index.php",
     Shop: base + "/mobstar/inventory/std_inventory.php",
     Inbox: base + "/mobstar/inbox.php",
-    PointsShop: base + "/mobstar/shops/pointsshop.php"
+    PointsShop: base + "/mobstar/shops/pointsshop.php",
+
+    Detective: base + "/mobstar/detectives.php",
+
     
 };

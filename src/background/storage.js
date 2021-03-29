@@ -1,6 +1,7 @@
 let accounts = {};
 let drugs = {};
 let config = {};
+let detective = {};
 
 export const getFromStorage = (keysToGet) => {
     return new Promise((resolve, reject) => {
@@ -92,7 +93,7 @@ export const updateAccount = async (email, updatedValues) => {
 export const updateAccounts = async (emails, updatedValues) => {
     const { accounts } = await getFromStorage("accounts");
 
-    for(const email of emails) {
+    for (const email of emails) {
         accounts[email] = {
             ...accounts[email],
             ...updatedValues
@@ -114,7 +115,7 @@ export const updateConfig = async (props) => {
 }
 
 export const addAccountsToUpdateList = async (emails) => {
-    const newList =[...new Set([...getConfig().updateAccounts, ...emails])];
+    const newList = [...new Set([...getConfig().updateAccounts, ...emails])];
 
     return updateConfig({ updateAccounts: newList });
 }
@@ -138,7 +139,7 @@ export const updateEveryAccount = async (updatedValues) => {
 }
 
 export const initStorage = async () => {
-    const result = await getFromStorage(["accounts", "drugs", "config"]);
+    const result = await getFromStorage(["accounts", "drugs", "config", "detective"]);
 
     accounts = result.accounts || {};
     drugs = result.drugs || {
@@ -177,6 +178,13 @@ export const initStorage = async () => {
         dontSellCars: []
     };
 
+    detective = {
+        searching: {},
+        found: {}
+    };
+
+    await setInStorage({ detective });
+
     chrome.storage.local.onChanged.addListener((changes) => {
         if (changes.accounts != null) {
             accounts = changes.accounts.newValue;
@@ -184,10 +192,78 @@ export const initStorage = async () => {
         if (changes.drugs != null) {
             drugs = changes.drugs.newValue;
         }
-        if(changes.config != null) {
+        if (changes.config != null) {
             config = changes.config.newValue;
         }
+        if (changes.detective != null) {
+            detective = changes.detective.newValue;
+        }
     });
+}
+function createUUID() {
+    // http://www.ietf.org/rfc/rfc4122.txt
+    // https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid
+    var s = [];
+    var hexDigits = "0123456789abcdef";
+    for (var i = 0; i < 36; i++) {
+        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    }
+    s[14] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
+    s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
+    s[8] = s[13] = s[18] = s[23] = "-";
+
+    var uuid = s.join("");
+    return uuid;
+}
+
+export const removeDetectiveSearch = async (id) => {
+    const { detective } = await getFromStorage("detective");
+
+    delete detective.searching[id];
+
+    return setInStorage({ detective });
+}
+
+export const removeDetectiveResult = async (id) => {
+    const { detective } = await getFromStorage("detective");
+
+    delete detective.found[id];
+
+    return setInStorage({ detective });
+}
+
+export const addNewDetectiveSearch = async (searcher, target, countries) => {
+    const { detective } = await getFromStorage("detective");
+    const id = createUUID();
+
+    detective.searching[id] = {
+        searcher,
+        target,
+        countries,
+        isoDate: new Date().toISOString()
+    };
+
+    return setInStorage({ detective });
+}
+
+export const addNewDetectiveFind = async (results) => {
+    const { detective } = await getFromStorage("detective");
+
+    for (const result of results) {
+        const { id, foundInCountry } = result;
+
+        const search = detective.searching[id];
+        delete detective.searching[id];
+
+        detective.found[id] = {
+            searcher: search.searcher,
+            target: search.target,
+            foundOn: new Date().toISOString(),
+            foundIn: foundInCountry
+        };
+    }
+
+    return setInStorage({ detective });
 }
 
 export const updateDrugRunPrices = (country1, drugPrices1, country2, drugPrices2) => {
@@ -224,3 +300,4 @@ export const resetDrugRun = async () => {
 export const getAccounts = () => accounts;
 export const getDrugsInfo = () => drugs;
 export const getConfig = () => config;
+export const getDetective = () => detective
