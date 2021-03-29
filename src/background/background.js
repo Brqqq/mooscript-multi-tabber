@@ -35,7 +35,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 // When a new popup is created
 chrome.webNavigation.onCreatedNavigationTarget.addListener(details => {
-    if(details.sourceTabId && tabSessions[details.sourceTabId] != null) {
+    if (details.sourceTabId && tabSessions[details.sourceTabId] != null) {
         tabSessions[details.tabId] = tabSessions[details.sourceTabId];
     }
 });
@@ -394,20 +394,27 @@ const start = async () => {
                     continue;
                 }
 
-                if (isDead(fetchRes.document)) {
-                    await updateAccount(email, {
-                        dead: true,
-                        active: false
-                    });
-                }
-                else if (isLoggedOut(fetchRes.result)) {
-                    await tryLogin(email, account, mobAuths);
-                } else if (isInJail(fetchRes.result)) {
-                    // Do nothing
-                }
-                else {
-                    console.error("Unknown error with user: " + email);
-                    console.error(e);
+                try {
+
+                    if (isDead(fetchRes.document)) {
+                        await updateAccount(email, {
+                            dead: true,
+                            active: false
+                        });
+                    }
+                    else if (isLoggedOut(fetchRes.result)) {
+                        await tryLogin(email, account, mobAuths);
+                    } else if (isInJail(fetchRes.result)) {
+                        // Do nothing
+                    }
+                    else {
+                        console.error("Unknown error with user: " + email);
+                        console.error(e);
+                        console.error(fetchRes);
+                    }
+                } catch (innerEx) {
+                    console.error("Error while handling error with user: " + email);
+                    console.error(innerEx);
                     console.error(fetchRes);
                 }
             }
@@ -456,20 +463,27 @@ const start = async () => {
                             continue;
                         }
 
-                        if (isDead(fetchRes.document)) {
-                            await updateAccount(email, {
-                                dead: true,
-                                active: false
-                            });
-                        }
-                        else if (isLoggedOut(fetchRes.result)) {
-                            await tryLogin(email, account, mobAuths);
-                        } else if (isInJail(fetchRes.result)) {
-                            // Do nothing
-                        }
-                        else {
-                            console.error("Unknown error with user: " + email);
-                            console.error(e);
+                        try {
+
+                            if (isDead(fetchRes.document)) {
+                                await updateAccount(email, {
+                                    dead: true,
+                                    active: false
+                                });
+                            }
+                            else if (isLoggedOut(fetchRes.result)) {
+                                await tryLogin(email, account, mobAuths);
+                            } else if (isInJail(fetchRes.result)) {
+                                // Do nothing
+                            }
+                            else {
+                                console.error("Unknown error with user: " + email);
+                                console.error(e);
+                                console.error(fetchRes);
+                            }
+                        } catch (innerEx) {
+                            console.error("Error while handling error with user: " + email);
+                            console.error(innerEx);
                             console.error(fetchRes);
                         }
                     }
