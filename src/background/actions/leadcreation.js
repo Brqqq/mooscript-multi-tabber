@@ -6,8 +6,8 @@ const cooldown = 60 * 60 * 1000;
 const extraTime = 10000;
 const totalCooldown = cooldown + extraTime;
 
-export const createLead = async () => {
-    const { document: leadFactoryDoc } = await getDoc(Routes.LeadFactory);
+export const createLead = async (account) => {
+    const { document: leadFactoryDoc } = await getDoc(Routes.LeadFactory, account.email);
     const doesntOwnLeadFactory = leadFactoryDoc.querySelector("p.feedback").innerText.includes("You don't own a lead factory,");
 
     if (doesntOwnLeadFactory) {
@@ -23,11 +23,11 @@ export const createLead = async () => {
 
     if (missingOre > 0) {
         const orePurchaseBody = `poor=0&reasonable=0&good=${missingOre}&buy=Buy`
-        await postForm(Routes.LeadFactory, orePurchaseBody);
+        await postForm(Routes.LeadFactory, orePurchaseBody, account.email);
     }
 
     const convertLeadBody = "convert=Convert+all+ore+to+lead";
-    await postForm(Routes.LeadFactory, convertLeadBody);
+    await postForm(Routes.LeadFactory, convertLeadBody, account.email);
     
     return totalCooldown;
 }

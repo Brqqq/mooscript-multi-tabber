@@ -7,8 +7,12 @@ const sanitize = (textContent) => encodeURIComponent(textContent)
     .replace(/%5B/g, "[")
     .replace(/%5D/g, "]")
 
-export const getDoc = async (url) => {
-    const fetchCall = await fetch(url);
+export const getDoc = async (url, email) => {
+    const fetchCall = await fetch(url, {
+        headers: {
+            "MooScript": email
+        }
+    });
     const fetchedText = await fetchCall.text();
 
     const domParser = new DOMParser();
@@ -22,12 +26,13 @@ export const getDoc = async (url) => {
     };
 }
 
-export const postForm = async (url, postBody, options = {}) => {
+export const postForm = async (url, postBody, email, options = {}) => {
     const fetchCall = await fetch(url, {
         method: "post",
         body: options.disableSanitize ? postBody : sanitize(postBody),
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
+            "MooScript": email
         }
     });
     const fetchedText = await fetchCall.text();
@@ -118,7 +123,7 @@ export const getGarageFilterBody = (filterOptions, sortOptions, sortDir) => {
     return `filteroptions=${filterOptions}&sortoptions=${sortOptions}&sortdir=${sortDir}&setfilter=${setfilter}`;
 }
 
-export const garageFromCountry = (garageRoute, country) => {
+export const garageFromCountry = (garageRoute, country, email) => {
     const countryMap = {
         "China": "country_8",
         "Colombia": "country_1",
@@ -136,7 +141,7 @@ export const garageFromCountry = (garageRoute, country) => {
 
     const postBody = getGarageFilterBody(mappedCountry, "default", "asc");
 
-    return postForm(garageRoute, postBody);
+    return postForm(garageRoute, postBody, email);
 }
 
 export const getDrugTypes = () => ({
@@ -197,11 +202,11 @@ export const getCash = (docWithStats) => {
     return +docWithStats.querySelectorAll("body > script:nth-child(7)")[0].innerText.match(/&euro;&nbsp;.*/)[0].replace(/\D/g, "");
 }
 
-export const getPlayerInfo = async () => {
-    const { document: pointShopDoc } = await getDoc(Routes.PointsShop);
-    const { document: accountsDoc } = await postForm(Routes.PersonalAjax, "page=1&_");
-    const { document: leadDoc } = await getDoc(Routes.LeadFactory);
-    const { document: inboxDoc } = await getDoc(Routes.Inbox);
+export const getPlayerInfo = async (email) => {
+    const { document: pointShopDoc } = await getDoc(Routes.PointsShop, email);
+    const { document: accountsDoc } = await postForm(Routes.PersonalAjax, "page=1&_", email);
+    const { document: leadDoc } = await getDoc(Routes.LeadFactory, email);
+    let { document: inboxDoc } = await getDoc(Routes.Inbox, email);
 
     // You might think: why don't you get the cash/rank/bullets/etc from that table on the top of most pages? Or just eval the JS that contains the data? Instead of the convoluted BS
     // Well, my dear imaginary asker, that table gets added dynamically with JS. We don't render the page, only get the raw HTML. So that table will be empty.
@@ -259,24 +264,6 @@ export const getBestDrug = (nextCountryPrices, currentPrices) => {
         }, { drugName: "", profit: 0 })
         .drugName
 }
-
-
-export const getMessages = async (inboxUrl) => {
-    const { document: inboxDoc } = await getDoc(inboxUrl);
-
-    const messageTables = Array.from(inboxDoc.querySelectorAll(".message"));
-    const messages = messageTables.map(el => {
-        const tdEls = el.querySelectorAll("td");
-
-        return {
-            from: tdEls[0].innerText,
-            message: tdEls[1].innerHTML
-        };
-    })
-
-    return messages;
-}
-
 
 export const isDead = (document) => {
     return document.title === "Dead";

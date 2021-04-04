@@ -10,7 +10,7 @@ export const buyItems = async (account) => {
         "plf"
     ];
 
-    const { document: inventoryDoc } = await getDoc(Routes.Inventory);
+    const { document: inventoryDoc } = await getDoc(Routes.Inventory, account.email);
     //document.getElementById("weapondata").innerText
 
     const weapon = inventoryDoc.getElementById("weapondata").innerText;
@@ -81,7 +81,7 @@ export const buyItems = async (account) => {
 
         if (itemInfo.current === "None") {
             if ((cash - margin) > itemInfo.price) {
-                await postForm(Routes.Shop, itemInfo.body);
+                await postForm(Routes.Shop, itemInfo.body, account.email);
                 cash -= itemInfo.price;
             } else {
                 return noMoneyCooldown;

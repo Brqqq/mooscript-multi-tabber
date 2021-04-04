@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch } from "./storage.js";
+import { addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch, removeDetectiveResult } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -24,9 +24,7 @@ chrome.browserAction.onClicked.addListener(() => {
 
 let mobAuths = {};
 let tabSessions = {};
-
-window.currentCookie = "";
-
+let requests = {};
 
 let manualLoginRequestId = "";
 
@@ -81,10 +79,24 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         if (manualLoginRequestId === details.requestId || details.url.includes("mooscript=true") || details.initiator == null || !details.initiator.includes("chrome-extension://")) {
             return { requestHeaders: details.requestHeaders };
         }
+        const email = details.requestHeaders.find(header => header.name === "MooScript");
+        if(!email) {
+            console.error("Couldn't find email header in a request!");
+            console.error("Headers: ", details.requestHeaders);
+
+            return { requestHeaders: details.requestHeaders };
+        }
+
+        requests[details.requestId] = {
+            email: email.value,
+            date: new Date().valueOf()
+        };
+
+        const cookie = mobAuths[email.value];
 
         for (var i = 0; i < details.requestHeaders.length; i++) {
             if (details.requestHeaders[i].name === "Cookie") {
-                details.requestHeaders[i].value = window.currentCookie;
+                details.requestHeaders[i].value = cookie;
                 break;
             }
         }
@@ -102,7 +114,7 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
         const account = getAccounts()[email];
 
         if (account) {
-            tryLogin(email, account, mobAuths)
+            tryLogin(email, account)
                 .catch(e => console.error);
         }
 
@@ -118,36 +130,42 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
         return { responseHeaders: details.responseHeaders };
     }
 
-    //const authCookie = authCookies[0];
+    const { email } = requests[details.requestId];
+    if(!email) {
+        console.error("Couldn't map response to a matching request!");
+        console.error("Headers: ", details.requestHeaders);
+
+        return { responseHeaders: details.responseHeaders };
+    }
+    delete requests[details.requestId];
+
     const authCookie = authCookies.find(cookie => !cookie.value.includes("deleted"))
 
     if (authCookie) {
         const authCookieParts = authCookie.value.split(";");
-        window.currentCookie = authCookieParts[0];
-
+        //window.currentCookie = authCookieParts[0];
+        mobAuths[email] = authCookieParts[0];
 
     } else {
         // Don't save the "deleted" cookie. It causes some weird infinite redirect issues
-        window.currentCookie = "";
+        mobAuths[email] = "";
     }
     // Strip set-cookie headers so they don't get saved and affect the tabs
     // We manually set the cookie so it doesn't affect us
-    details.responseHeaders = details.responseHeaders.filter(header => header.name !== "Set-Cookie");;
+    details.responseHeaders = details.responseHeaders.filter(header => header.name !== "Set-Cookie");
     return { responseHeaders: details.responseHeaders };
 },
     { urls: ["https://www.mobstar.cc/*"] },
     ["blocking", "responseHeaders", "extraHeaders"]);
 
 var fetchMobAuth = async (email, password) => {
-    const fetchResult = await postForm(Routes.Login, `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, { disableSanitize: true });
+    const fetchResult = await postForm(Routes.Login, `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, email, { disableSanitize: true });
 
     if (isLoggedOut(fetchResult.result)) {
         return false;
     }
 
-    // window.currentCookie is set as a side effect from making the API call (check the header magic above)
-    // Ugly problems require ugly solutions ¯\_(ツ)_/¯
-    return window.currentCookie;
+    return mobAuths[email];
 }
 window.fetchMobAuth = fetchMobAuth;
 
@@ -190,6 +208,9 @@ window.resetDrugRun = resetDrugRun;
 
 window.addAccountsToUpdateList = addAccountsToUpdateList;
 
+window.removeDetectiveSearch = removeDetectiveSearch;
+window.removeDetectiveResult = removeDetectiveResult;
+
 window.startDetectiveSearch = async (searcher, target, countries, clearPastSearches) => {
     let attempts = 0;
     const maxAttempts = 3;
@@ -204,13 +225,14 @@ window.startDetectiveSearch = async (searcher, target, countries, clearPastSearc
             let auth = mobAuths[searcher];
 
             if (auth == null) {
-                auth = await tryLogin(searcher, account, mobAuths);
+                auth = await tryLogin(searcher, account);
                 if (!auth) return "Error with logging in your account. Incorrect password?";
             }
-            window.currentCookie = auth;
 
-            await searchAccount(target, countries, clearPastSearches);
-
+            const result = await searchAccount(target, countries, clearPastSearches, searcher);
+            if(result !== true) {
+                return "There was an error: " + result;
+            }
             await addNewDetectiveSearch(searcher, target, countries)
 
             return true;
@@ -218,7 +240,7 @@ window.startDetectiveSearch = async (searcher, target, countries, clearPastSearc
         } catch (e) {
             let fetchRes;
             try {
-                fetchRes = await getDoc(Routes.TestPage);
+                fetchRes = await getDoc(Routes.TestPage, searcher);
             } catch (innerEx) {
                 console.log("Error with connecting to mobstar");
                 console.log("Initial error")
@@ -233,7 +255,7 @@ window.startDetectiveSearch = async (searcher, target, countries, clearPastSearc
                     return "Your account is dead!";
                 }
                 else if (isLoggedOut(fetchRes.result)) {
-                    await tryLogin(searcher, account, mobAuths);
+                    await tryLogin(searcher, account);
                 } else if (isInJail(fetchRes.result)) {
                     return "Your account is in jail. Try again in a bit.";
                 }
@@ -264,7 +286,7 @@ window.login = async (email) => {
 
     try {
         if (authToken == null) {
-            authToken = await tryLogin(email, account, mobAuths);
+            authToken = await tryLogin(email, account);
         }
 
         if (!authToken) {
@@ -347,13 +369,28 @@ const start = async () => {
     const loop = async () => {
         const accounts = getAccounts();
 
+        // The requests map needs to be cleaned every once in a while
+        if(Math.floor(Math.random() * 5) == 2) {
+            const currDate = new Date().valueOf();
+            const keys = Object.keys(requests);
+
+            const timeBeforeCleanup = 1000 * 60 * 2;
+            for(const key of keys) {
+                const dateDifference = currDate - requests[key].date;
+
+                if(dateDifference > timeBeforeCleanup) {
+                    delete requests[key];
+                }
+            }
+        }
+
         for (let email of Object.keys(accounts)) {
             const config = getConfig();
             if (config.updateAccounts.length > 0) {
                 break;
             }
 
-            const account = accounts[email];
+            const account = { ...accounts[email], email };
             if (!account.active) {
                 continue;
             }
@@ -369,10 +406,9 @@ const start = async () => {
 
             try {
                 if (auth == null) {
-                    auth = await tryLogin(email, account, mobAuths);
+                    auth = await tryLogin(email, account);
                     if (!auth) continue;
                 }
-                window.currentCookie = auth;
 
                 const willCollectionResult = await performAction(collectWill, account, cooldownConfig.willCheckingCooldown, cooldownConfig.lastWillChecked);
                 if (willCollectionResult) {
@@ -453,7 +489,7 @@ const start = async () => {
             } catch (e) {
                 let fetchRes;
                 try {
-                    fetchRes = await getDoc(Routes.TestPage);
+                    fetchRes = await getDoc(Routes.TestPage, account.email);
                 } catch (innerEx) {
                     console.log("Error with connecting to mobstar");
                     console.log("Initial error")
@@ -473,7 +509,7 @@ const start = async () => {
                         });
                     }
                     else if (isLoggedOut(fetchRes.result)) {
-                        await tryLogin(email, account, mobAuths);
+                        await tryLogin(email, account);
                     } else if (isInJail(fetchRes.result)) {
                         // Do nothing
                     }
@@ -511,10 +547,9 @@ const start = async () => {
 
                     try {
                         if (auth == null) {
-                            auth = await tryLogin(email, account, mobAuths);
+                            auth = await tryLogin(email, account);
                             if (!auth) continue;
                         }
-                        window.currentCookie = auth;
 
                         await performAction(savePlayerInfo, account, 0, 0);
                         attempt = maxAttempts;
@@ -522,7 +557,7 @@ const start = async () => {
                     } catch (e) {
                         let fetchRes;
                         try {
-                            fetchRes = await getDoc(Routes.TestPage);
+                            fetchRes = await getDoc(Routes.TestPage, email);
                         } catch (innerEx) {
                             console.log("Error with connecting to mobstar");
                             console.log("Initial error")
@@ -542,7 +577,7 @@ const start = async () => {
                                 });
                             }
                             else if (isLoggedOut(fetchRes.result)) {
-                                await tryLogin(email, account, mobAuths);
+                                await tryLogin(email, account);
                             } else if (isInJail(fetchRes.result)) {
                                 // Do nothing
                             }
@@ -585,14 +620,13 @@ const start = async () => {
 
                     try {
                         if (auth == null) {
-                            auth = await tryLogin(search.searcher, account, mobAuths);
+                            auth = await tryLogin(search.searcher, account);
                             if (!auth) continue;
                         }
-                        window.currentCookie = auth;
 
                         //await performAction(savePlayerInfo, account, 0, 0);
-                        const result = await findResult(search.target);
-                        if(result) {
+                        const result = await findResult(search.target, search.searcher);
+                        if (result) {
                             foundResults.push({ id: searchKey, foundInCountry: result });
                         }
                         attempt = maxAttempts;
@@ -600,7 +634,7 @@ const start = async () => {
                     } catch (e) {
                         let fetchRes;
                         try {
-                            fetchRes = await getDoc(Routes.TestPage);
+                            fetchRes = await getDoc(Routes.TestPage, search.searcher);
                         } catch (innerEx) {
                             console.log("Error with connecting to mobstar");
                             console.log("Initial error")
@@ -618,7 +652,7 @@ const start = async () => {
                                 attempt = maxAttempts;
                             }
                             else if (isLoggedOut(fetchRes.result)) {
-                                await tryLogin(search.searcher, account, mobAuths);
+                                await tryLogin(search.searcher, account);
                             } else if (isInJail(fetchRes.result)) {
                                 continue;
                             }
@@ -636,7 +670,7 @@ const start = async () => {
                 } while (attempt < maxAttempts)
             }
 
-            if(foundResults.length > 0) {
+            if (foundResults.length > 0) {
                 await addNewDetectiveFind(foundResults);
             }
         }
@@ -645,13 +679,12 @@ const start = async () => {
     gameLoop(loop, 30)
 }
 
-const tryLogin = async (email, account, mobAuths) => {
+const tryLogin = async (email, account) => {
     let attempt = 0;
     const maxAttempts = 3;
     do {
         const auth = await fetchMobAuth(email, account.password);
         if (auth) {
-            mobAuths[email] = auth;
             if (account.invalidPassword) {
                 await updateAccount(email, {
                     invalidPassword: false

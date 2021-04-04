@@ -1,8 +1,8 @@
 import { getDoc } from "../actions/utils.js";
 import { Routes } from "../actions/routes.js";
 
-export const findResult = async (target) => {
-    const { document } = await getDoc(Routes.Detective);
+export const findResult = async (target, email) => {
+    const { document } = await getDoc(Routes.Detective, email);
 
     const resultTable = document.querySelectorAll("table")[2];
 

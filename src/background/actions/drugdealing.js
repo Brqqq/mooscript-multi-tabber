@@ -11,7 +11,7 @@ const unknownIssueCooldown = 15 * 60 * 1000;
 
 const noMoneyCooldown = 15 * 60 * 1000;
 
-export const doDrugDeal = async () => {
+export const doDrugDeal = async (account) => {
     const drugsInfo = getDrugsInfo();
 
     const today = moment().tz("Europe/Amsterdam").format("YYYY-MM-DD");
@@ -22,12 +22,12 @@ export const doDrugDeal = async () => {
         return unknownIssueCooldown;
     }
 
-    const { document: flightsPage } = await getDoc(Routes.Flights);
+    const { document: flightsPage } = await getDoc(Routes.Flights, account.email);
     if (flightsPage.documentElement.innerText.includes("No flights are leaving at the moment")) {
         return unknownIssueCooldown;
     }
 
-    const { document: drugsPage } = await getDoc(Routes.Drugs);
+    const { document: drugsPage } = await getDoc(Routes.Drugs, account.email);
     const currentCountry = getCurrentCountry(drugsPage);
 
     // Determine the next run country
@@ -57,7 +57,7 @@ export const doDrugDeal = async () => {
 
     if (Object.keys(drugSellMap).length > 0) {
         const sellBody = buildDrugSaleBody("Sell", drugSellMap);
-        await postForm(Routes.Drugs, sellBody);
+        await postForm(Routes.Drugs, sellBody, account.email);
         return rebuyCooldown;
     }
 
@@ -80,7 +80,7 @@ export const doDrugDeal = async () => {
     if (howManyToBuy > 0) {
         const buyMap = { [bestDrugToBuy]: howManyToBuy };
         const buyBody = buildDrugSaleBody("Buy", buyMap);
-        const { document: result } = await postForm(Routes.Drugs, buyBody);
+        const { document: result } = await postForm(Routes.Drugs, buyBody, account.email);
         const newCarryingDrugs = parseDrugsWindow(result);
         if (newCarryingDrugs.find(d => d.name === bestDrugToBuy).carrying !== howManyWeShouldHave) {
             return rebuyCooldown;
@@ -90,7 +90,7 @@ export const doDrugDeal = async () => {
     // Fly to the next country
     // It's possible we don't have enough money for a flight. 
     const flightBody = "flyto=" + nextRun.country;
-    const { document: flightResult } = await postForm(Routes.Flights, flightBody);
+    const { document: flightResult } = await postForm(Routes.Flights, flightBody, account.email);
     if (flightResult.documentElement.innerText.includes("You don't have enough cash")) {
         return noMoneyCooldown;
     }
@@ -98,7 +98,7 @@ export const doDrugDeal = async () => {
     // Sell the drugs
     const sellBestDrugMap = { [bestDrugToBuy]: maxCarry };
     const sellBestDrugBody = buildDrugSaleBody("Sell", sellBestDrugMap);
-    const { document: newDrugPage } = await postForm(Routes.Drugs, sellBestDrugBody);
+    const { document: newDrugPage } = await postForm(Routes.Drugs, sellBestDrugBody, account.email);
 
     await updateDrugRunPrices(currentCountry, buildDrugPriceMap(drugsPage), nextRun.country, buildDrugPriceMap(newDrugPage));
 

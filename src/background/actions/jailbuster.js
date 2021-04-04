@@ -1,13 +1,13 @@
-import { getDoc, postForm } from "./utils.js";
+import { getDoc } from "./utils.js";
 import { Routes } from "./routes.js";
 
 const maxBustingPercentageCooldown = 2 * 60 * 1000;
 const nobodyInJailToBustCooldown = 10 * 60 * 1000;
 const bustingCooldown = 10 * 60 * 1000;
 
-export const doJailbust = async () => {
+export const doJailbust = async (account) => {
     for (let attempt = 0; attempt < 10; attempt++) {
-        const { document: jailDoc } = await getDoc(Routes.Jail);
+        const { document: jailDoc } = await getDoc(Routes.Jail, account.email);
         const bustPercentage = jailDoc.documentElement.innerText.match(/\d+%/)[0];
         if (bustPercentage === "100%") {
             return maxBustingPercentageCooldown;
@@ -19,7 +19,7 @@ export const doJailbust = async () => {
             return nobodyInJailToBustCooldown;
         }
 
-        const { document: bustResult } = await getDoc(Routes.MainPage + firstPersonToBust.pathname + firstPersonToBust.search);
+        const { document: bustResult } = await getDoc(Routes.MainPage + firstPersonToBust.pathname + firstPersonToBust.search, account.email);
 
         if (bustResult.documentElement.innerText.includes("Busted pal!")) {
             return bustingCooldown;

@@ -86,7 +86,7 @@ const Options = props => {
     const [showImportModal, setShowImportModal] = React.useState(false);
 
     const setAllToActiveStatus = (newStatus) => {
-        chrome.extension.getBackgroundPage().updateEveryAccount({ active: newStatus });;
+        chrome.extension.getBackgroundPage().updateEveryAccount({ active: newStatus });
     }
     const resetDrugRun = () => {
         chrome.extension.getBackgroundPage().resetDrugRun();

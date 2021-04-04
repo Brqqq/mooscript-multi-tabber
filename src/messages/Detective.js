@@ -22,7 +22,9 @@ const Detective = (props) => {
     if (!detective) return null;
 
     const accountArray = Object.keys(accounts)
-        .map(email => ({ ...accounts[email], email }));
+        .map(email => ({ ...accounts[email], email }))
+        .filter(acc => acc.name != null && acc.name.trim() !== "")
+        .sort((a, b) => a.name.localeCompare(b.name));
 
     const onSubmit = async () => {
         const trimmedTarget = target.trim();
@@ -69,6 +71,15 @@ const Detective = (props) => {
             alert("There was an error with logging in your account. Maybe the password is incorrect or mobstar doesn't work?");
         }
     }
+
+    const deleteSearch = async (id) => {
+        await chrome.extension.getBackgroundPage().removeDetectiveSearch(id);
+    }
+
+    const deleteResult = async (id) => {
+        await chrome.extension.getBackgroundPage().removeDetectiveResult(id);
+    }
+
 
     return <div>
         <h3>Detective</h3>
@@ -160,6 +171,7 @@ const Detective = (props) => {
                         <th>Searcher</th>
                         <th>Target</th>
                         <th>Searching in countries</th>
+                        <th>Remove from this list</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -167,7 +179,7 @@ const Detective = (props) => {
                         const search = detective.searching[id];
                         return <tr key={id}>
                             <td>
-                                {new Date(search.isoDate).toLocaleTimeString()}
+                                {new Date(search.isoDate).toLocaleString()}
                             </td>
                             <td>
                                 <button title="Click to login" className="link-button" onClick={() => onLogin(search.searcher)}>{accounts[search.searcher]?.name}</button>
@@ -177,6 +189,11 @@ const Detective = (props) => {
                             </td>
                             <td>
                                 {search.countries.join(", ")}
+                            </td>
+                            <td>
+                                <button onClick={() => deleteSearch(id)}>
+                                    Remove
+                                </button>
                             </td>
                         </tr>
                     })}
@@ -193,6 +210,7 @@ const Detective = (props) => {
                         <th>Searcher</th>
                         <th>Target</th>
                         <th>Found in country</th>
+                        <th>Remove from this list</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -200,7 +218,7 @@ const Detective = (props) => {
                         const found = detective.found[id];
                         return <tr key={id}>
                             <td>
-                                {new Date(found.foundOn).toLocaleTimeString()}
+                                {new Date(found.foundOn).toLocaleString()}
                             </td>
                             <td>
                                 <button title="Click to login" className="link-button" onClick={() => onLogin(found.searcher)}>{accounts[found.searcher]?.name}</button>
@@ -210,6 +228,11 @@ const Detective = (props) => {
                             </td>
                             <td>
                                 {found.foundIn}
+                            </td>
+                            <td>
+                                <button onClick={() => deleteResult(id)}>
+                                    Remove
+                            </button>
                             </td>
                         </tr>
                     })}

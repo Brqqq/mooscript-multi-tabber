@@ -4,13 +4,13 @@ import { Routes } from "./routes.js";
 // 2 hrs cooldown
 const cooldownInMs = 120 * 60 * 1000;
 
-export const sellCars = async () => {
+export const sellCars = async (account) => {
     //TODO: dontsellcarslist from config
     const dontSellCarsList = ["Armored Van", "Chrysler ME412"];
-    const { document: garagePage } = await getDoc(Routes.ManageCars);
+    const { document: garagePage } = await getDoc(Routes.ManageCars, account.email);
     const currentCountry = getCurrentCountry(garagePage);
 
-    const { document: garageDoc } = await garageFromCountry(Routes.ManageCars, currentCountry);
+    const { document: garageDoc } = await garageFromCountry(Routes.ManageCars, currentCountry, account.email);
     let noCarsLeftToSell = false;
     let currentPage = garageDoc;
 
@@ -34,12 +34,12 @@ export const sellCars = async () => {
                 return `action[${car.id}]=sell`;
             }).join("&");
 
-            currentPage = (await postForm(Routes.ManageCars, body + "&offset=" + offset)).document;
+            currentPage = (await postForm(Routes.ManageCars, body + "&offset=" + offset, account.email)).document;
         } else if (currentPageNr === totalPages) {
             noCarsLeftToSell = true;
         } else {
             const newOffset = offset + 30;
-            currentPage = (await postForm(Routes.ManageCars + "?offset=" + newOffset)).document;
+            currentPage = (await postForm(Routes.ManageCars + "?offset=" + newOffset, "", account.email)).document;
         }
         iteration++;
 

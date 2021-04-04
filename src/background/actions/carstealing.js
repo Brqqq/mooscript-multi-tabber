@@ -7,13 +7,13 @@ const extraTime = 5000;
 
 const totalCooldown = cooldownInMs + extraTime;
 
-export const doGta = async () => {
+export const doGta = async (account) => {
     const drugsData = getDrugsInfo();
     let shippingCountries = [
         drugsData.run1.country || "Colombia",
         drugsData.run2.country || "United States"
     ];
-    const { document: gtaPageDoc } = await getDoc(Routes.CarStealing);
+    const { document: gtaPageDoc } = await getDoc(Routes.CarStealing, account.email);
 
     if (gtaPageDoc.documentElement.innerText.includes("is only available for paying members")) {
         return totalCooldown;
@@ -42,7 +42,7 @@ export const doGta = async () => {
         }
     }
 
-    const { document: stealResultDoc } = await postForm(Routes.CarStealing, `stealcar=${bestOption.index}&takefromcrewname=`);
+    const { document: stealResultDoc } = await postForm(Routes.CarStealing, `stealcar=${bestOption.index}&takefromcrewname=`, account.email);
 
     // Success
     if (stealResultDoc.actualUrl === Routes.ManageCars) {
@@ -64,7 +64,7 @@ export const doGta = async () => {
                 return marketPlace + "&" + action;
             }).join("&");
 
-            await postForm(Routes.ManageCars, body);
+            await postForm(Routes.ManageCars, body, account.email);
         }
     }
 

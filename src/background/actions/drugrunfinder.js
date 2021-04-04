@@ -9,7 +9,7 @@ const noCashCooldown = 15 * 60 * 1000;
 const extraTime = 10000
 const successfulCooldown = (45 * 60 * 1000) + extraTime;
 
-export const findDrugRun = async () => {
+export const findDrugRun = async (account) => {
     const drugsData = getDrugsInfo();
     const today = moment().tz("Europe/Amsterdam").format("YYYY-MM-DD");
 
@@ -34,7 +34,7 @@ export const findDrugRun = async () => {
         return drugRunFindAfterTime.valueOf() - moment().valueOf() + 10000;
     }
 
-    const { document: statsDoc } = await getDoc(Routes.Stats);
+    const { document: statsDoc } = await getDoc(Routes.Stats, account.email);
     const statsTableBody = statsDoc.querySelectorAll("table.userprof tbody")[6];
     const stats = parseStatsPage(statsTableBody);
 
@@ -45,7 +45,7 @@ export const findDrugRun = async () => {
         return drugRunUncertainCooldown;
     }
 
-    const { document: flightsPage } = await getDoc(Routes.Flights);
+    const { document: flightsPage } = await getDoc(Routes.Flights, account.email);
     const cash = getCash(flightsPage);
     if (cash < 2000) {
         return noCashCooldown;
@@ -73,10 +73,10 @@ export const findDrugRun = async () => {
 
         const flightBody = "flyto=" + countryToFlyTo;
 
-        await postForm(Routes.Flights, flightBody)
+        await postForm(Routes.Flights, flightBody, account.email)
     }
 
-    const { document: drugsPage } = await getDoc(Routes.Drugs);
+    const { document: drugsPage } = await getDoc(Routes.Drugs, account.email);
     const drugPriceMap = buildDrugPriceMap(drugsPage);
 
     if (updateRun1) {
