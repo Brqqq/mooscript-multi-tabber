@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch, removeDetectiveResult } from "./storage.js";
+import { addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch, removeDetectiveResult, setSync, getSync } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -80,7 +80,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
             return { requestHeaders: details.requestHeaders };
         }
         const email = details.requestHeaders.find(header => header.name === "MooScript");
-        if(!email) {
+        if (!email) {
             console.error("Couldn't find email header in a request!");
             console.error("Headers: ", details.requestHeaders);
 
@@ -131,7 +131,7 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
     }
 
     const { email } = requests[details.requestId];
-    if(!email) {
+    if (!email) {
         console.error("Couldn't map response to a matching request!");
         console.error("Headers: ", details.requestHeaders);
 
@@ -211,6 +211,8 @@ window.addAccountsToUpdateList = addAccountsToUpdateList;
 window.removeDetectiveSearch = removeDetectiveSearch;
 window.removeDetectiveResult = removeDetectiveResult;
 
+window.setSync = setSync;
+
 window.startDetectiveSearch = async (searcher, target, countries, clearPastSearches) => {
     let attempts = 0;
     const maxAttempts = 3;
@@ -230,7 +232,7 @@ window.startDetectiveSearch = async (searcher, target, countries, clearPastSearc
             }
 
             const result = await searchAccount(target, countries, clearPastSearches, searcher);
-            if(result !== true) {
+            if (result !== true) {
                 return "There was an error: " + result;
             }
             await addNewDetectiveSearch(searcher, target, countries)
@@ -330,6 +332,49 @@ const performAction = (action, account, cooldown, lastActionInMs) => {
     return false;
 }
 
+// Some groups have an integration with MooScript
+// If the 'sync' settings have been filled in, we will occasionally sync our data with the target server
+const syncWithServer = async () => {
+    const sync = getSync();
+
+    if (sync.serverName) {
+        const accounts = getAccounts();
+
+        const payload = Object.keys(accounts)
+            .map(email => {
+                const acc = accounts[email];
+                return {
+                    name: acc.name || "",
+                    email,
+                    rank: acc.rank || "Bacteria",
+                    bullets: acc.bullets || 0,
+                    cash: acc.cash || 0,
+                    crew: acc.crew || "",
+                    payingDays: acc.payingDays || "0",
+                }
+            });
+        try {
+            await fetch(sync.url, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: "update",
+                    auth: {
+                        username: sync.username,
+                        password: sync.password
+                    },
+                    accounts: payload
+                })
+            });
+        } catch (e) {
+            console.error("ERROR with syncing!!");
+            console.error(e);
+        }
+    }
+}
+
 const start = async () => {
     await initStorage();
 
@@ -370,15 +415,15 @@ const start = async () => {
         const accounts = getAccounts();
 
         // The requests map needs to be cleaned every once in a while
-        if(Math.floor(Math.random() * 5) == 2) {
+        if (Math.floor(Math.random() * 5) == 2) {
             const currDate = new Date().valueOf();
             const keys = Object.keys(requests);
 
             const timeBeforeCleanup = 1000 * 60 * 2;
-            for(const key of keys) {
+            for (const key of keys) {
                 const dateDifference = currDate - requests[key].date;
 
-                if(dateDifference > timeBeforeCleanup) {
+                if (dateDifference > timeBeforeCleanup) {
                     delete requests[key];
                 }
             }
@@ -542,7 +587,10 @@ const start = async () => {
 
                 do {
                     attempt++;
-                    const account = accounts[email];
+                    const account = {
+                        ...accounts[email],
+                        email
+                    };
                     let auth = mobAuths[email];
 
                     try {
@@ -676,7 +724,8 @@ const start = async () => {
         }
     };
 
-    gameLoop(loop, 30)
+    gameLoop(loop, 30);
+    gameLoop(syncWithServer, 20);
 }
 
 const tryLogin = async (email, account) => {

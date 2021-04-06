@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "3.0.0",
+  "version": "3.1.0",
   "name": "Mooscript",
   "icons": {
     "16": "logo16.png",
@@ -16,7 +16,6 @@
   "browser_action": {
     "default_title": "Options"
   },
-  
   "permissions": [
     "storage",
     "cookies",
@@ -24,5 +23,8 @@
     "webRequestBlocking",
     "webNavigation",
     "https://www.mobstar.cc/*"
+  ],
+  "optional_permissions": [
+    "http://*/"
   ]
 }

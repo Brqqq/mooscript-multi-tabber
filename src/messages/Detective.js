@@ -92,7 +92,7 @@ const Detective = (props) => {
                             <select value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)}>
                                 <option value={undefined}></option>
                                 {accountArray.map(acc => <option key={acc.email} value={acc.email}>
-                                    {acc.name || acc.email}
+                                    {acc.name}
                                 </option>)}
                             </select>
                         </td>

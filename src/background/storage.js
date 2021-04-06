@@ -2,6 +2,7 @@ let accounts = {};
 let drugs = {};
 let config = {};
 let detective = {};
+let sync = {};
 
 export const getFromStorage = (keysToGet) => {
     return new Promise((resolve, reject) => {
@@ -139,7 +140,7 @@ export const updateEveryAccount = async (updatedValues) => {
 }
 
 export const initStorage = async () => {
-    const result = await getFromStorage(["accounts", "drugs", "config", "detective"]);
+    const result = await getFromStorage(["accounts", "drugs", "config", "detective", "sync"]);
 
     accounts = result.accounts || {};
     drugs = result.drugs || {
@@ -183,6 +184,13 @@ export const initStorage = async () => {
         found: {}
     };
 
+    sync = result.sync || {
+        url: "",
+        username: "",
+        password: "",
+        serverName: ""
+    };
+
     await setInStorage({ detective });
 
     chrome.storage.local.onChanged.addListener((changes) => {
@@ -197,6 +205,9 @@ export const initStorage = async () => {
         }
         if (changes.detective != null) {
             detective = changes.detective.newValue;
+        }
+        if(changes.sync != null) {
+            sync = changes.sync.newValue;
         }
     });
 }
@@ -297,7 +308,19 @@ export const resetDrugRun = async () => {
     await setInStorage({ drugs });
 }
 
+export const setSync = async (url, username, password, serverName) => {
+    await setInStorage({
+        sync: {
+            url,
+            username,
+            password,
+            serverName
+        }
+    })
+}
+
 export const getAccounts = () => accounts;
 export const getDrugsInfo = () => drugs;
 export const getConfig = () => config;
-export const getDetective = () => detective
+export const getDetective = () => detective;
+export const getSync = () => sync;

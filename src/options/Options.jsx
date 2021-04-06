@@ -1,6 +1,7 @@
 /*global chrome*/
 import React from "react";
 import Rodal from "rodal";
+import Sync from "./Sync";
 
 const ExportModal = props => {
     return <Rodal
@@ -84,6 +85,7 @@ const Options = props => {
 
     const [showExportModal, setShowExportModal] = React.useState(false);
     const [showImportModal, setShowImportModal] = React.useState(false);
+    const [showSyncModal, setSyncModal] = React.useState(false);
 
     const setAllToActiveStatus = (newStatus) => {
         chrome.extension.getBackgroundPage().updateEveryAccount({ active: newStatus });
@@ -107,12 +109,15 @@ const Options = props => {
         &nbsp;
         <button onClick={() => setShowImportModal(true)}>Import</button>
         &nbsp;
+        <button onClick={() => setSyncModal(true)}>Sync</button>
+        &nbsp;
         <button onClick={resetDrugRun}>Reset drug run</button>
         &nbsp;
         <button onClick={() => window.location = "/messages.html"}>Witness list</button>
 
         {showExportModal && <ExportModal accounts={props.accounts} onClose={() => setShowExportModal(false)} />}
         {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} />}
+        {showSyncModal && <Sync onClose={() => setSyncModal(false)} />}
     </div>
 }
 
