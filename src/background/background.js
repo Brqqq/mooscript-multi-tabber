@@ -9,7 +9,7 @@ import { findDrugRun } from "./actions/drugrunfinder.js";
 import { doDrugDeal } from "./actions/drugdealing.js";
 import { createLead } from "./actions/leadcreation.js";
 import { collectWill } from "./actions/willcollector.js";
-import { isDead, getDoc, isLoggedOut, isInJail, postForm, sleep } from "./actions/utils.js";
+import { isDead, getDoc, isLoggedOut, isInJail, postForm, sleep, abbreviateCountry } from "./actions/utils.js";
 import { Routes } from "./actions/routes.js";
 import { savePlayerInfo } from "./actions/saveplayerinfo.js";
 import { buyItems } from "./actions/buyitems.js";
@@ -341,16 +341,23 @@ const syncWithServer = async () => {
         const accounts = getAccounts();
 
         const payload = Object.keys(accounts)
+            .filter(email => {
+                const account = accounts[email];
+                return !!account.name;
+            })
             .map(email => {
                 const acc = accounts[email];
                 return {
-                    name: acc.name || "",
+                    name: acc.name,
                     email,
-                    rank: acc.rank || "Bacteria",
-                    bullets: acc.bullets || 0,
-                    cash: acc.cash || 0,
-                    crew: acc.crew || "",
+                    rank: acc.rank,
+                    bullets: acc.bullets,
+                    cash: `€ ${acc.cash.toLocaleString()}`,
+                    crew: acc.crew,
                     payingDays: acc.payingDays || "0",
+                    lead: typeof acc.lead === "number" ? acc.lead.toLocaleString() : "",
+                    honor: acc.honor,
+                    country: abbreviateCountry(acc.country)
                 }
             });
         try {
@@ -725,7 +732,7 @@ const start = async () => {
     };
 
     gameLoop(loop, 30);
-    gameLoop(syncWithServer, 20);
+    gameLoop(syncWithServer, 60 * 15);
 }
 
 const tryLogin = async (email, account) => {
