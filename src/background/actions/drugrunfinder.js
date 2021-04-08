@@ -27,7 +27,7 @@ export const findDrugRun = async (account) => {
     const run1Country = updateRun1 ? "Unknown" : drugsData.run1.country;
     const run2Country = updateRun2 ? "Unknown" : drugsData.run2.country;
 
-    const drugRunFindAfterTime = moment().tz("Europe/Amsterdam").startOf("day").add(1, "hour");
+    const drugRunFindAfterTime = moment().tz("Europe/Amsterdam").startOf("day").add(2, "hour");
 
 
     if (moment().isBefore(drugRunFindAfterTime)) {
@@ -41,7 +41,7 @@ export const findDrugRun = async (account) => {
     const twoHighestPopulatedStatRows = stats.sort((a, b) => b.percentage - a.percentage).slice(0, 2);
     const combinedPercentage = twoHighestPopulatedStatRows[0].percentage + twoHighestPopulatedStatRows[1].percentage;
 
-    if (combinedPercentage < 60) {
+    if (combinedPercentage < 65) {
         return drugRunUncertainCooldown;
     }
 
