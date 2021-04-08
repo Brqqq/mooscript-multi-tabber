@@ -348,7 +348,7 @@ const syncWithServer = async () => {
             .map(email => {
                 const acc = accounts[email];
                 return {
-                    name: acc.name,
+                    name: acc.name.trim(),
                     email,
                     rank: acc.rank,
                     bullets: acc.bullets,
