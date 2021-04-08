@@ -70,13 +70,19 @@ const Sync = (props) => {
     }, []);
 
     const onSave = async () => {
+        if(url === "") {
+            await chrome.extension.getBackgroundPage()
+                    .setSync("", "", "", "");
+            alert("Succesfully removed your sync");
+            return;
+        }
         try {
             const result = await verifyAndSaveSync(url, username, password);
             alert("Succesfully connected with: " + result);
 
             setServer(result);
         } catch(e) {
-            alert("Connection failed. Error: " + e);
+            alert("Connection failed. Check if the URL is correct.\nCheck if your username & password is correct.\nError: " + e);
             console.error(e);
         }
     }
@@ -90,6 +96,9 @@ const Sync = (props) => {
         <div className="body">
             <div>
                 {server}
+            </div>
+            <div>
+                MooScript can send data from MooScript to your own database. If you want this integration with your database, contact cow@mooscript.com
             </div>
             <div style={{ marginTop: 6 }}>
                 <input type="text" placeholder="URL" value={url} onChange={e => setUrl(e.currentTarget.value)} />
