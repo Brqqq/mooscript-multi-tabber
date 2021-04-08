@@ -14,7 +14,8 @@ const AccountList = (props) => {
     const [filter, setFilter] = React.useState({
         name: "",
         crewName: "",
-        value: ""
+        value: "",
+        rank: ""
     });
 
     const onStorageChanges = (changes) => {

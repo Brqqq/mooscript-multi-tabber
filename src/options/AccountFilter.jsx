@@ -15,7 +15,8 @@ const AccountFilter = (props) => {
         props.onFilterChange({
             name: "",
             crewName: "",
-            type: ""
+            type: "",
+            rank: ""
         });
     }
 
@@ -55,6 +56,26 @@ const AccountFilter = (props) => {
                         {typeOptions.map(t => <option key={t}>
                             {t}
                         </option>)}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Rank</td>
+                <td>
+                    <select
+                        style={{ width: "100%" }}
+                        value={props.filter.rank}
+                        onChange={(e) => onChange("rank", e.target.value)}
+                    >
+                        <option value=""></option>
+                        <option value="Bacteria">Bacteria</option>
+                        <option value="Low Life">Low life</option>
+                        <option value="Apprentice">Apprentice</option>
+                        <option value="Hitman">Hitman</option>
+                        <option value="Assassin">Assassin</option>
+                        <option value="Local Boss">Local Boss</option>
+                        <option value="Boss">Boss</option>
+                        <option value="Godfather">Godfather</option>
                     </select>
                 </td>
             </tr>

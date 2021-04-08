@@ -1,5 +1,23 @@
-export const filterAccounts = (accounts, { name, crewName, type }) => {
-    if(!name && !crewName && !type) return accounts;
+const normalizeRank = (rank) => {
+    switch(rank) {
+		case "Young Woman": return "Low Life";
+		case "Adult Lady": return "Apprentice";
+		case "Hitwoman": return "Hitman";
+		case "Local Bossin": return "Local Boss";
+		case "Bossin": return "Boss";
+		case "Godmother": return "Godfather";
+	}
+	
+	return rank;
+}
+const shouldFilterRank = (accountRank, rankToFilterOn) => {
+    const normalizedRank = normalizeRank(accountRank);
+
+    return normalizedRank === rankToFilterOn;
+}
+
+export const filterAccounts = (accounts, { name, crewName, type, rank }) => {
+    if(!name && !crewName && !type && !rank) return accounts;
 
     const filteredAccounts = { ...accounts };
 
@@ -17,6 +35,10 @@ export const filterAccounts = (accounts, { name, crewName, type }) => {
 
             if(type && shouldBeAdded) {
                 shouldBeAdded = accounts[curr].type === type || (accounts[curr].type == null && type === "⭕");
+            }
+
+            if(rank && shouldBeAdded) {
+                shouldBeAdded = shouldFilterRank(accounts[curr].rank, rank);
             }
             
             if(shouldBeAdded) {

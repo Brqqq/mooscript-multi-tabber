@@ -280,3 +280,19 @@ export const isInJail = (fetchResult) => {
 export const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export const abbreviateCountry = (country) => {
+    switch (country) {
+        case "Netherlands":
+        case "The Netherlands": return "NL";
+        case "Colombia": return "CO";
+        case "United States": return "US";
+        case "Italy": return "IT";
+        case "Japan": return "JP";
+        case "Russia": return "RU";
+        case "China": return "CN";
+        case "Great Britain": return "GB";
+        case "Cuba": return "CU";
+        default: return country;
+    }
+}
