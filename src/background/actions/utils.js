@@ -202,11 +202,10 @@ export const getCash = (docWithStats) => {
     return +docWithStats.querySelectorAll("body > script:nth-child(7)")[0].innerText.match(/&euro;&nbsp;.*/)[0].replace(/\D/g, "");
 }
 
-export const getPlayerInfo = async (email) => {
+export const getPlayerInfo = async ({ email, ...rest }) => {
     const { document: pointShopDoc } = await getDoc(Routes.PointsShop, email);
     const { document: accountsDoc } = await postForm(Routes.PersonalAjax, "page=1&_", email);
     const { document: leadDoc } = await getDoc(Routes.LeadFactory, email);
-    let { document: inboxDoc } = await getDoc(Routes.Inbox, email);
 
     // You might think: why don't you get the cash/rank/bullets/etc from that table on the top of most pages? Or just eval the JS that contains the data? Instead of the convoluted BS
     // Well, my dear imaginary asker, that table gets added dynamically with JS. We don't render the page, only get the raw HTML. So that table will be empty.
@@ -218,7 +217,36 @@ export const getPlayerInfo = async (email) => {
     // When there is a crew, it's wrapped inside anchor tags. And yes I use regex to extract the name. Deal with it.
     const crewName = crew === "None" ? crew : crew.match(/>(.*?)</)[1];
     const isPaying = accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[8].innerText.trim() === "Yes";
-    const messageTables = Array.from(inboxDoc.querySelectorAll(".message"));
+    const plane = pointShopDoc.querySelectorAll("body > script:nth-child(7)")[0].innerText.match(/label:"Plane", value:"(.*?)"/)[1].trim();
+    const accountAnchor = accountsDoc.querySelectorAll(".userprof > tbody > tr > td > a")[0];
+
+    let messages = rest.messages || [];
+    let previousCrew = rest.previousCrew || "";
+    let startDate = rest.startDate || "";
+
+
+    // This seems to trigger click limits
+    // Data doesn't update a lot so we can skip this every now and then
+    if (Math.ceil(Math.random() * 2) === 1) {
+        let { document: inboxDoc } = await getDoc(Routes.Inbox, email);
+        const messageTables = Array.from(inboxDoc.querySelectorAll(".message"));
+        messages = messageTables.map(el => {
+            const tdEls = el.querySelectorAll("td");
+
+            return {
+                from: tdEls[0].innerText,
+                message: tdEls[1].innerHTML
+            };
+        });
+    }
+
+    // Fetching a profile page quickly triggers click limits
+    // The data rarely updates so we don't want to fetch it too often
+    if (!previousCrew || Math.ceil(Math.random() * 3) === 1) {
+        const { document: profileDoc } = await getDoc(Routes.Base + accountAnchor.pathname + accountAnchor.search, email);
+        previousCrew = profileDoc.querySelectorAll("td")[17].innerText;
+        startDate = profileDoc.querySelectorAll("td")[23].innerText;
+    }
 
     return {
         cash: getCash(pointShopDoc),
@@ -233,14 +261,10 @@ export const getPlayerInfo = async (email) => {
         email: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[2].innerText,
         name: accountsDoc.querySelectorAll(".userprof > tbody > tr > td")[4].innerText,
         lead: lead ? +lead.innerText : "No lead factory",
-        messages: messageTables.map(el => {
-            const tdEls = el.querySelectorAll("td");
-
-            return {
-                from: tdEls[0].innerText,
-                message: tdEls[1].innerHTML
-            };
-        })
+        messages,
+        previousCrew,
+        startDate,
+        plane
     }
 }
 

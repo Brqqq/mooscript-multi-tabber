@@ -4,7 +4,7 @@ import { updateAccount } from "../storage.js";
 const defaultCooldown = 1000 * 60 * 2;
 
 export const savePlayerInfo = async (account) => {
-    const playerInfo = await getPlayerInfo(account.email);
+    const playerInfo = await getPlayerInfo(account);
 
     const { email, ...rest } = playerInfo;
 

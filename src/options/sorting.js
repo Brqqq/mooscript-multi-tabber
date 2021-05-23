@@ -16,7 +16,12 @@ const sortAlphabetically = (accountList, propToCompare, isAsc, zeroValue, defaul
 
 const sortNumbers = (accountList, propToCompare, isAsc) => {
     const sorted = accountList
-        .sort((a, b) => (+a[propToCompare] || 0) - (+b[propToCompare] || 0));
+        .sort((a, b) => {
+            if(a.dead && b.dead) return 0;
+            if(a.dead) return 1;
+            if(b.dead) return -1;
+            return (+a[propToCompare] || 0) - (+b[propToCompare] || 0);
+        });
     
     return isAsc ? sorted : sorted.reverse();
 }
@@ -57,7 +62,7 @@ const booleanSort = (accountList, propToCompare, isAsc) => {
 
 
 const numericalProps = ["cash", "bullets", "lead", "payingDays", "honor", "credits"];
-const alphabeticalProps = ["email", "name", "crew", "country", "type"];
+const alphabeticalProps = ["email", "name", "crew", "country", "type", "plane", "startDate", "previousCrew"];
 const booleanProps = ["enableJailbusting", "enableSmallCrime", "enableGta", "enableCarSelling", "enableItemBuying", "enableDrugRunning", "enableBuyingPbf"];
 
 export const sortAccounts = (accountList, propToSort, isAsc) => {

@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.11.3",
+    "@material-ui/icons": "^4.11.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -41,7 +43,11 @@
   "devDependencies": {
     "copy-webpack-plugin": "^6.4.1",
     "customize-cra": "^1.0.0",
+    "npm-watch": "^0.9.0",
     "react-app-rewire-multiple-entry": "^2.2.1",
     "react-app-rewired": "^2.1.8"
+  },
+  "watch": {
+    "start": "src/"
   }
 }

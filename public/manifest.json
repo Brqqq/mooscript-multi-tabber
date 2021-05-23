@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "3.2.0",
+  "version": "3.4.0",
   "name": "Mooscript",
   "icons": {
     "16": "logo16.png",
@@ -25,6 +25,7 @@
     "https://www.mobstar.cc/*"
   ],
   "optional_permissions": [
-    "http://*/"
+    "http://*/",
+    "https://*/"
   ]
 }

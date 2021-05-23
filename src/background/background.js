@@ -2,7 +2,7 @@ import "./lib/moment.js";
 import "./lib/moment-timezone.js";
 
 import { doSmallCrime } from "./actions/smallcrime.js"
-import { addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch, removeDetectiveResult, setSync, getSync } from "./storage.js";
+import { setDrugrunType, addNewDetectiveSearch, addNewDetectiveFind, removeAccount, updateAccount, updateAccounts, addAccount, updateEveryAccount, resetDrugRun, getFromStorage, setInStorage, initStorage, getAccounts, getConfig, updateConfig, addAccountsToUpdateList, getDetective, removeDetectiveSearch, removeDetectiveResult, setSync, getSync } from "./storage.js";
 import { doGta } from "./actions/carstealing.js";
 import { sellCars } from "./actions/carseller.js";
 import { findDrugRun } from "./actions/drugrunfinder.js";
@@ -14,7 +14,7 @@ import { Routes } from "./actions/routes.js";
 import { savePlayerInfo } from "./actions/saveplayerinfo.js";
 import { buyItems } from "./actions/buyitems.js";
 import { doJailbust } from "./actions/jailbuster.js";
-
+import { fetchDrugRun } from "./actions/drugrunfetcher.js";
 import { searchAccount } from "./detective/search.js";
 import { findResult } from "./detective/findresult.js";
 
@@ -213,6 +213,8 @@ window.removeDetectiveResult = removeDetectiveResult;
 
 window.setSync = setSync;
 
+window.setDrugrunType = setDrugrunType;
+
 window.startDetectiveSearch = async (searcher, target, countries, clearPastSearches) => {
     let attempts = 0;
     const maxAttempts = 3;
@@ -343,7 +345,7 @@ const syncWithServer = async () => {
         const payload = Object.keys(accounts)
             .filter(email => {
                 const account = accounts[email];
-                return !!account.name;
+                return !!account.name && account.active;
             })
             .map(email => {
                 const acc = accounts[email];
@@ -352,12 +354,16 @@ const syncWithServer = async () => {
                     email,
                     rank: acc.rank,
                     bullets: acc.bullets,
-                    cash: `€ ${acc.cash.toLocaleString()}`,
+                    cash: acc.cash,
                     crew: acc.crew,
                     payingDays: acc.payingDays || "0",
                     lead: typeof acc.lead === "number" ? acc.lead.toLocaleString() : "",
                     honor: acc.honor,
-                    country: abbreviateCountry(acc.country)
+                    country: acc.country,
+                    plane: acc.plane || "",
+                    previousCrew: acc.previousCrew || "",
+                    startDate: acc.startDate || "",
+                    dead: acc.dead
                 }
             });
         try {
@@ -403,6 +409,9 @@ const start = async () => {
 
         lastDrugFind: 0,
         drugFindCooldown: 0,
+
+        lastDrugFetch: 0,
+        drugFetchCooldown: 0,
 
         lastJailBust: 0,
         jailBustCooldown: 0,
@@ -515,11 +524,23 @@ const start = async () => {
                     }
                 }
 
-                if (account.enableDrugRunning) {
-                    const drugFindResult = await performAction(findDrugRun, account, cooldownConfig.drugFindCooldown, cooldownConfig.lastDrugFind);
-                    if (drugFindResult) {
-                        cooldownConfig.drugFindCooldown = drugFindResult;
-                        cooldownConfig.lastDrugFind = new Date().valueOf();
+                if (config.drugrunType === "stats") {
+                    if (account.enableDrugRunning) {
+                        const drugFindResult = await performAction(findDrugRun, account, cooldownConfig.drugFindCooldown, cooldownConfig.lastDrugFind);
+                        if (drugFindResult) {
+                            cooldownConfig.drugFindCooldown = drugFindResult;
+                            cooldownConfig.lastDrugFind = new Date().valueOf();
+                        }
+                    }
+                }
+
+                else if (config.drugrunType === "api") {
+                    if (account.enableDrugRunning) {
+                        const drugFetchResult = await performAction(fetchDrugRun, account, cooldownConfig.drugFetchCooldown, cooldownConfig.lastDrugFetch);
+                        if (drugFetchResult) {
+                            cooldownConfig.drugFetchCooldown = drugFetchResult;
+                            cooldownConfig.lastDrugFetch = new Date().valueOf();
+                        }
                     }
                 }
 

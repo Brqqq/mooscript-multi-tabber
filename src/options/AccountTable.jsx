@@ -31,11 +31,25 @@ const pbfIcon = <img title="Buy personal bullet factory" className="icon" src={B
 const Name = ({ account }) => {
     if (account.invalidPassword) {
         return <span style={{ color: "red" }}>Incorrect password!</span>
-    } else if (!account.name) {
+    } else if(account.dead) {
+        return <><span style={{ color: "red"}}>DEAD</span> ({account.name})</>;
+    }
+    else if (!account.name) {
         return <>Loading...</>
     }
 
     return <>{account.name}</>;
+}
+
+const DeathStrike =  ({ dead, children }) => {
+    const style = dead ? {
+        textDecoration: "line-through",
+        color: "red"
+    } : undefined;
+
+    return <span style={style}>
+        {children}
+    </span>
 }
 
 const ConfigIcon = ({ email, title, account, svg, propName }) => {
@@ -143,6 +157,9 @@ const AccountTable = (props) => {
                 <th><SortButton prop="country">Country</SortButton></th>
                 <th><SortButton prop="lead">Lead</SortButton></th>
                 <th><SortButton prop="crew">Crew</SortButton></th>
+                <th><SortButton prop="previousCrew">Previous crew</SortButton></th>
+                <th><SortButton prop="plane">Plane</SortButton></th>
+                <th><SortButton prop="startDate">Start date</SortButton></th>
                 <th><SortButton prop="payingDays">Paying days</SortButton></th>
                 <th><SortButton prop="honor">Honor</SortButton></th>
                 <th><SortButton prop="credits">Credits</SortButton></th>
@@ -209,23 +226,26 @@ const AccountTable = (props) => {
                     <td><Name account={account} /></td>
                     <td>
                         {!account.dead && account.rank}
-                        {account.dead && <span style={{ color: "red" }}>DEAD</span>}
+                        {account.dead && <><span style={{ color: "red" }}>DEAD</span> ({account.rank})</>}
                     </td>
-                    <td>€ {account.cash && account.cash.toLocaleString()}</td>
-                    <td>{account.bullets}</td>
-                    <td>{account.country}</td>
-                    <td>{typeof account.lead === "number" ? `${account.lead.toLocaleString()} kg` : account.lead}</td>
-                    <td>{account.crew}</td>
-                    <td>{account.payingDays}</td>
-                    <td>{account.honor}</td>
-                    <td>{account.credits}</td>
+                    <td><DeathStrike dead={account.dead}>€ {account.cash && account.cash.toLocaleString()}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.bullets}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.country}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{typeof account.lead === "number" ? `${account.lead.toLocaleString()} kg` : account.lead}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.crew}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.previousCrew}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.plane}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.startDate}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.payingDays}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.honor}</DeathStrike></td>
+                    <td><DeathStrike dead={account.dead}>{account.credits}</DeathStrike></td>
                     <td>
                         <button onClick={e => {
                             e.preventDefault();
                             onRemove(email);
                         }}>
                             Remove
-                            </button>
+                        </button>
                     </td>
                 </tr>
             })}

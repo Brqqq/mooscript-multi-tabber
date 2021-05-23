@@ -59,7 +59,10 @@ export const addAccount = async (email, password) => {
             country: "",
             name: "",
             lead: "",
-            type: "⭕"
+            type: "⭕",
+            plane: "",
+            previousCrew: "",
+            startDate: ""
         }
     };
 
@@ -174,9 +177,13 @@ export const initStorage = async () => {
         }
     };
 
-    config = result.config || {
+    config = {
         updateAccounts: [],
-        dontSellCars: []
+        dontSellCars: [],
+        drugrunUrl: "http://extension.mooscript.com/api/drug-run",
+        drugrunType: "stats", // "stats" | "api"
+        drugrunApiError: "",
+        ...result.config
     };
 
     detective = {
@@ -191,7 +198,7 @@ export const initStorage = async () => {
         serverName: ""
     };
 
-    await setInStorage({ detective });
+    await setInStorage({ detective, config });
 
     chrome.storage.local.onChanged.addListener((changes) => {
         if (changes.accounts != null) {
@@ -315,6 +322,27 @@ export const setSync = async (url, username, password, serverName) => {
             username,
             password,
             serverName
+        }
+    })
+}
+
+export const setDrugrunType = async (drugrunType, drugrunUrl) => {
+    const { config } = await getFromStorage("config");
+    await setInStorage({
+        config: {
+            ...config,
+            drugrunUrl,
+            drugrunType
+        }
+    })
+}
+
+export const setDrugrunError = async (message) => {
+    const { config } = await getFromStorage("config");
+    await setInStorage({
+        config: {
+            ...config,
+            drugrunApiError: message
         }
     })
 }

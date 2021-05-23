@@ -10,6 +10,7 @@ import { filterAccounts } from "./filterAccounts";
 const AccountList = (props) => {
     const [accounts, setAccounts] = React.useState({});
     const [drugs, setDrugs] = React.useState({});
+    const [config, setConfig] = React.useState({});
     const [showAccountConfig, setShowAccountConfig] = React.useState(false);
     const [filter, setFilter] = React.useState({
         name: "",
@@ -25,6 +26,9 @@ const AccountList = (props) => {
         if (changes.drugs != null) {
             setDrugs(changes.drugs.newValue);
         }
+        if (changes.config != null) {
+            setConfig(changes.config.newValue);
+        }
     }
 
 
@@ -36,9 +40,10 @@ const AccountList = (props) => {
     }, [onStorageChanges]);
 
     React.useEffect(() => {
-        chrome.storage.local.get(["accounts", "drugs"], ({ accounts, drugs }) => {
+        chrome.storage.local.get(["accounts", "drugs", "config"], ({ accounts, drugs, config }) => {
             setAccounts(accounts || {});
             setDrugs(drugs || {});
+            setConfig(config || {});
         })
     }, []);
 
@@ -74,8 +79,9 @@ const AccountList = (props) => {
     const accountKeys = Object.keys(filteredAccounts);
 
     const totalCash = accountKeys.reduce((acc, curr) => {
-        if (Number.isInteger(accounts[curr].cash)) {
-            return acc + accounts[curr].cash;
+        const account = accounts[curr];
+        if (!account.dead && Number.isInteger(account.cash)) {
+            return acc + account.cash;
         }
 
         return acc;
@@ -96,6 +102,7 @@ const AccountList = (props) => {
     return <>
         <Options accounts={accounts} drugs={drugs} />
         {hasDrugRun && <h2>DR: {drugs.run1.country || "<unknown>"} -> {drugs.run2.country || "<unknown>"}</h2>}
+        {config.drugrunApiError && <span style={{ color: "red" }}>{config.drugrunApiError}</span>}
         <h2>Total cash: € {totalCash.toLocaleString()}</h2>
 
         <AccountFilter
