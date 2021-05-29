@@ -9,7 +9,7 @@ const sanitize = (textContent) => encodeURIComponent(textContent)
 export const getDoc = async (url, email) => {
     const fetchCall = await fetch(url, {
         headers: {
-            "MooScript": email
+            "MooScriptTabber": email
         }
     });
     const fetchedText = await fetchCall.text();
@@ -31,7 +31,7 @@ export const postForm = async (url, postBody, email, options = {}) => {
         body: options.disableSanitize ? postBody : sanitize(postBody),
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "MooScript": email
+            "MooScriptTabber": email
         }
     });
     const fetchedText = await fetchCall.text();

@@ -52,11 +52,11 @@ chrome.webRequest.onBeforeRequest.addListener(
             const { email, password } = details.requestBody.formData;
 
             // Store credentials in memory so it can be used to reauthenticate when session expires
-            accounts[email] = { password: password[0] };
+            accounts[email] = { ...accounts[email], password: password[0] };
 
             tabSessions[details.tabId] = email[0];
             requests[details.requestId] = {
-                email: email,
+                email: email[0],
                 date: new Date().valueOf()
             };
         }
@@ -74,7 +74,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     function (details) {
         const isLoginRequest = details.url.includes("main/login.php") && details.method === "POST";
 
-        const mooscriptHeader = details.requestHeaders.find(header => header.name === "MooScript")
+        const mooscriptHeader = details.requestHeaders.find(header => header.name === "MooScriptTabber")
 
         if (!mooscriptHeader && (isLoginRequest || tabSessions[details.tabId] == null)) {
             return { requestHeaders: details.requestHeaders };
@@ -119,9 +119,8 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
     const { email } = requests[details.requestId];
 
     // Auto-relog
-    if (details.url.includes("main/message.php?msgid=1") || details.url.endsWith("mobstar.cc/main/")) {
+    if (details.url.includes("main/message.php?msgid=1") && tabSessions[details.tabId] != null) {
         const { password } = accounts[email];
-
         if (password) {
             tryLogin(email, password)
                 .catch(console.error);
@@ -139,36 +138,36 @@ chrome.webRequest.onHeadersReceived.addListener((details) => {
 
     if (!email) {
         console.error("Couldn't map response to a matching request!");
-        console.error("Headers: ", details.requestHeaders);
+        console.error("Headers: ", details.responseHeaders);
 
         delete requests[details.requestId];
         return { responseHeaders: details.responseHeaders };
     }
 
-    const authCookie = authCookies.find(cookie => !cookie.value.includes("deleted"))
-
+    const authCookie = authCookies.find(cookie => !cookie.value.includes("deleted"));
     if (authCookie) {
         const authCookieParts = authCookie.value.split(";");
         //window.currentCookie = authCookieParts[0];
         mobAuths[email] = authCookieParts[0];
-
+        if (!accounts[email].name) {
+            getDoc("https://www.mobstar.cc/mobstar/main.php", email)
+                .then(({ document }) => {
+                    const h3 = document.querySelector("h3");
+                    if (h3?.textContent) {
+                        const user = accounts[email];
+                        const name = h3.textContent.split("Welcome to Mobstar, ")[1];
+                        accounts[email] = {
+                            ...user,
+                            name
+                        }
+                    }
+                })
+        }
     } else {
         // Don't save the "deleted" cookie. It causes some weird infinite redirect issues
         mobAuths[email] = "";
     }
 
-    getDoc("https://www.mobstar.cc/mobstar/main.php", email)
-        .then(({ document }) => {
-            const h3 = document.querySelector("h3");
-            if(h3?.textContent) {
-                const user = accounts[email];
-                const name = h3.textContent.split("Welcome to Mobstar, ")[1];
-                accounts[email] = {
-                    ...user,
-                    name
-                }
-            }
-        })
     // Strip set-cookie headers so they don't get saved and affect the tabs
     // We manually set the cookie so it doesn't affect us
     details.responseHeaders = details.responseHeaders.filter(header => header.name !== "Set-Cookie");
