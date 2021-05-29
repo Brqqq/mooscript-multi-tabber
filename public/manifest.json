@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
   "version": "3.4.0",
-  "name": "Mooscript",
+  "name": "Mooscript - Multi Tabber",
   "icons": {
     "16": "logo16.png",
     "64": "logo64.png",
     "128": "logo128.png"
   },
-  "description": "A script for mobstar.cc",
+  "description": "A multi-tabber script for mobstar.cc",
   "background": {
     "page": "background.html",
     "persistent": true
@@ -17,15 +17,10 @@
     "default_title": "Options"
   },
   "permissions": [
-    "storage",
     "cookies",
     "webRequest",
     "webRequestBlocking",
     "webNavigation",
     "https://www.mobstar.cc/*"
-  ],
-  "optional_permissions": [
-    "http://*/",
-    "https://*/"
   ]
 }
